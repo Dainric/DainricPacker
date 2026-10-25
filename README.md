@@ -1,7 +1,7 @@
 # Dainric 打包器
 
 把 Python 脚本打包成独立 Windows EXE 的桌面工具，基于 **.NET 9 + WPF**。
-内置 Python 3.12 / 3.14 运行时，目标机不需要安装 Python 或 .NET；支持批量打包、
+内置 Python 3.12 / 3.14 运行时，目标机不需要安装 Python 或 NET；支持批量打包、
 依赖检查、失败诊断与自动修复、产物自检、打包历史、日志落盘、代码签名和 CLI。
 
 [![build](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml/badge.svg)](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml)
