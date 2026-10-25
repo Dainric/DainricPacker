@@ -1,0 +1,37 @@
+# 本地敏感文件（不要提交）
+秘钥.txt
+Windows激活*.py
+
+# 构建产物 / 中间目录
+_native_selfcontained/
+_smoke/
+_uismoke/
+_apptemp/
+_bundle_extract/
+打包器-绿色版-*/
+打包器-安装程序/*.exe
+*.exe
+*.msi
+*.zip
+*.7z
+*.log
+crash.log
+boot.log
+_staged.txt
+**/bin/
+**/obj/
+打包器-C++源码/build/
+**/__pycache__/
+*.pyc
+*.err
+
+# 截图：只放行 docs/images 下的演示图
+*.png
+!docs/images/
+!docs/images/*.png
+*.jpg
+*.jpeg
+*.gif
+
+# 本机归档（开发过程文件不进仓库）
+归档/

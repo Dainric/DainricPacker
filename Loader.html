@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Loader · 通用加载动画</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   Dainric Loader v2 · 通用加载动画
+   作者 Dainric
+   兼容旧 API: Loader.init({brand,bg,fg,dim,dots,duration,onDone})
+   新增: variant / size / width / speed / label / theme / target
+   ═══════════════════════════════════════════════════════════════ */
+
+:root{
+  --ldr-bg:  #000000;
+  --ldr-fg:  #ffffff;
+  --ldr-dim: rgba(255,255,255,.42);
+  --ldr-c1:  #0A84FF;          /* iOS systemBlue  */
+  --ldr-c2:  #64D2FF;          /* iOS systemCyan  */
+  --ldr-c3:  #BF5AF2;          /* iOS systemPurple*/
+  --ldr-size: 48px;
+  --ldr-width: 4px;
+  --ldr-speed: 1;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ── 全屏遮罩 ───────────────────────────────────────────────── */
+#ldr-overlay{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--ldr-bg);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);
+  backdrop-filter:saturate(180%) blur(24px);
+  opacity:1;visibility:visible;
+  transition:opacity .55s cubic-bezier(.32,.72,0,1),visibility .55s;
+}
+#ldr-overlay.done{opacity:0;visibility:hidden;pointer-events:none}
+
+.ldr-stage{display:flex;flex-direction:column;align-items:center;gap:22px}
+
+/* ── 环形基础 ───────────────────────────────────────────────── */
+.ldr-ring{display:block;overflow:visible;transform:translateZ(0)}
+
+/* 轨道 */
+.ldr-track{
+  fill:none;stroke:currentColor;opacity:.13;
+  stroke-width:var(--ldr-width);
+}
+
+/* 圆弧：只动 dashoffset（不做 0 长度 dash，避免个别渲染器把点画成整圈）
+   配合旋转 → 弧长在 90°~270° 之间平滑伸缩，还原 iOS 的甩动节奏 */
+.ldr-arc{
+  fill:none;stroke:var(--ldr-fg);
+  stroke-width:var(--ldr-width);stroke-linecap:round;
+  stroke-dasharray:88 999;
+  transform-origin:50% 50%;
+  animation:
+    ldr-dash calc(1.9s / var(--ldr-speed)) cubic-bezier(.62,.06,.38,.94) infinite,
+    ldr-spin calc(1.9s / var(--ldr-speed)) linear infinite;
+  will-change:stroke-dashoffset,transform;
+}
+@keyframes ldr-dash{
+  0%   {stroke-dashoffset:0}
+  50%  {stroke-dashoffset:-44}      /* 弧长最大，居中 */
+  100% {stroke-dashoffset:-176}     /* 收拢并甩出，无缝接回起点 */
+}
+@keyframes ldr-spin{
+  from{transform:rotate(0deg)}
+  to  {transform:rotate(360deg)}
+}
+
+/* ── 变体 1：流光环 conic-gradient ──────────────────────────── */
+.ldr-flow{
+  position:relative;border-radius:50%;
+  background:conic-gradient(from 0deg,
+      transparent 0deg,
+      color-mix(in srgb,var(--ldr-c1) 55%,transparent) 90deg,
+      var(--ldr-c1) 180deg,
+      var(--ldr-c2) 250deg,
+      transparent 330deg);
+  animation:ldr-spin calc(1.15s / var(--ldr-speed)) linear infinite;
+  will-change:transform;
+}
+.ldr-flow::after{
+  content:'';position:absolute;inset:var(--ldr-width);
+  border-radius:50%;background:var(--ldr-bg);
+}
+/* 内圈补一层柔光，边缘不会发死 */
+.ldr-flow::before{
+  content:'';position:absolute;inset:-1px;border-radius:50%;
+  box-shadow:0 0 22px -6px var(--ldr-c1);
+  opacity:.55;
+  animation:ldr-glow calc(1.6s / var(--ldr-speed)) ease-in-out infinite;
+}
+@keyframes ldr-glow{0%,100%{opacity:.35}50%{opacity:.7}}
+
+/* ── 变体 2：三瓣呼吸（iOS 活动指示器） ─────────────────────── */
+.ldr-lobes{
+  position:relative;
+  animation:ldr-spin calc(1.25s / var(--ldr-speed)) linear infinite;
+  will-change:transform;
+}
+/* 每瓣固定在圆周 0/120/240 度，只做缩放+透明度脉冲；整体旋转交给容器
+   直径 18%，中心距 206% 的自身直径 → 分布圆约为容器的 74%，接近 iOS 观感
+   注意：--a 必须声明在基础规则里，否则在同一条规则内被 var() 引用会因循环失效
+   导致整条 transform 被丢弃（表现为三瓣挤在中心） */
+.ldr-lobe{
+  --a:0deg;
+  position:absolute;left:50%;top:50%;
+  width:18%;height:18%;border-radius:50%;
+  background:var(--ldr-fg);
+  margin:-9% 0 0 -9%;
+  transform:rotate(var(--a)) translateY(-206%);
+  animation:ldr-lobe calc(1.25s / var(--ldr-speed)) cubic-bezier(.4,0,.2,1) infinite;
+  will-change:transform,opacity;
+}
+.ldr-lobe:nth-child(1){--a:0deg;  animation-delay:0s}
+.ldr-lobe:nth-child(2){--a:120deg;animation-delay:calc(-.4167s / var(--ldr-speed))}
+.ldr-lobe:nth-child(3){--a:240deg;animation-delay:calc(-.8333s / var(--ldr-speed))}
+@keyframes ldr-lobe{
+  0%  {opacity:.30;transform:rotate(var(--a)) translateY(-206%) scale(.62)}
+  26% {opacity:1;  transform:rotate(var(--a)) translateY(-206%) scale(1)}
+  100%{opacity:.30;transform:rotate(var(--a)) translateY(-206%) scale(.62)}
+}
+
+/* ── 变体 3：点阵呼吸（兼容旧版外观） ───────────────────────── */
+.ldr-dots{display:flex;align-items:center;gap:8px}
+.ldr-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--ldr-fg);
+  animation:ldr-breathe calc(1.4s / var(--ldr-speed)) cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes ldr-breathe{
+  0%,100%{transform:scale(.55);opacity:.22}
+  50%    {transform:scale(1);  opacity:1}
+}
+
+/* ── 变体 4：进度环（确定性） ───────────────────────────────── */
+.ldr-prog-arc{
+  fill:none;stroke:url(#ldrGrad);
+  stroke-width:var(--ldr-width);stroke-linecap:round;
+  transform-origin:50% 50%;transform:rotate(-90deg);
+  transition:stroke-dashoffset .62s cubic-bezier(.32,.72,0,1);
+}
+
+/* ── 文字 ───────────────────────────────────────────────────── */
+.ldr-label{
+  font:500 12px/1.4 -apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC','Segoe UI',Roboto,sans-serif;
+  color:var(--ldr-dim);
+  letter-spacing:.14em;
+  animation:ldr-fade 2.4s ease-in-out infinite;
+}
+@keyframes ldr-fade{0%,100%{opacity:.5}50%{opacity:1}}
+
+.ldr-brand{
+  font:600 13px/1 -apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Segoe UI',sans-serif;
+  color:var(--ldr-dim);letter-spacing:.22em;text-transform:uppercase;
+}
+.ldr-pct{
+  font:600 12px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color:var(--ldr-fg);font-variant-numeric:tabular-nums;
+}
+
+/* 无障碍：尊重系统“减弱动态效果” */
+@media (prefers-reduced-motion:reduce){
+  .ldr-arc,.ldr-flow,.ldr-flow::before,.ldr-lobe,.ldr-dot,.ldr-label{
+    animation-duration:3.2s !important;
+  }
+  #ldr-overlay{transition-duration:.01s}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ 全屏加载遮罩 ══════════ -->
+<div id="ldr-overlay">
+  <div class="ldr-stage">
+    <div id="ldr-slot"></div>
+    <div class="ldr-brand" id="ldr-brand">Dainric</div>
+  </div>
+</div>
+
+<!-- ══════════ 组件展示台 ══════════ -->
+<main class="show">
+  <header class="show-head">
+    <h1>通用加载动画</h1>
+    <p>四种形态 · 纯 CSS 驱动 · 无依赖 · 支持深浅色与自动降级</p>
+  </header>
+
+  <section class="grid" id="grid"></section>
+
+  <section class="api">
+    <h2>接入方式</h2>
+    <pre><code>// 1) 全屏遮罩（默认）
+Loader.init({ brand:'Dainric', variant:'ios', size:48, theme:'dark' });
+Loader.hide();
+
+// 2) 内联到任意容器
+Loader.mount(document.querySelector('.card'), {
+  variant:'flow', size:56, label:'正在同步'
+});
+
+// 3) 确定性进度
+const p = Loader.mount(el, { variant:'progress', size:88 });
+p.set(0.42);            // 平滑过渡，无需自己做缓动
+p.done();
+
+// 4) 旧版 API 完全兼容
+Loader.init({ dots:7, duration:2400, onDone:fn });</code></pre>
+  </section>
+</main>
+
+<style>
+/* 展示台样式（组件本身不依赖这些） */
+body{background:#08090C;color:#E7EAF0;
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,'PingFang SC','Segoe UI',sans-serif;
+  min-height:100vh;padding:56px 32px 72px}
+.show{max-width:1120px;margin:0 auto}
+.show-head h1{font-size:26px;font-weight:600;letter-spacing:-.4px;margin-bottom:8px}
+.show-head p{color:#7C8798;font-size:13.5px}
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));
+  gap:16px;margin:36px 0 44px;
+}
+.cell{
+  background:#111319;border:1px solid #1E222C;border-radius:18px;
+  padding:32px 20px 20px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;min-height:196px;
+  transition:border-color .3s cubic-bezier(.32,.72,0,1),transform .3s cubic-bezier(.32,.72,0,1);
+}
+.cell:hover{border-color:#2C3342;transform:translateY(-2px)}
+.cell .cap{font-size:11.5px;color:#68727F;letter-spacing:.04em;margin-top:auto}
+.api h2{font-size:15px;font-weight:600;margin-bottom:14px;color:#B9C2CF}
+.api pre{
+  background:#0E1015;border:1px solid #1E222C;border-radius:14px;
+  padding:20px 22px;overflow:auto;
+}
+.api code{
+  font:12.5px/1.85 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color:#9FB0C6;white-space:pre;
+}
+</style>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   Dainric Loader v2
+   ═══════════════════════════════════════════════════════════════ */
+var Loader = (function () {
+  'use strict';
+
+  var V = 2;                                   // SVG viewBox 尺寸
+  var DASH_FULL = 2 * Math.PI * 14;            // r=14 的周长
+
+  var _cfg = {
+    brand:    'Dainric',
+    variant:  'ios',      // ios | flow | lobes | dots | progress
+    size:     48,
+    width:    4,
+    speed:    1,
+    label:    '',
+    theme:    'dark',     // dark | light | auto
+    bg:       null,
+    fg:       null,
+    dim:      null,
+    dots:     7,          // 兼容旧参数
+    duration: 2400,       // 兼容旧参数
+    onDone:   null,
+    target:   null        // 旧版遗留，保留不报错
+  };
+
+  /* ── 主题 ─────────────────────────────────────────────────── */
+  function _themeVars(t) {
+    if (t === 'auto') {
+      t = (window.matchMedia &&
+           window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    return t === 'light'
+      ? { bg:'#FFFFFF', fg:'#0B0D12', dim:'rgba(11,13,18,.45)' }
+      : { bg:'#000000', fg:'#FFFFFF', dim:'rgba(255,255,255,.42)' };
+  }
+
+  function _applyTheme(root, cfg) {
+    if (!root || !root.style) return;
+    var t = _themeVars(cfg.theme);
+    root.style.setProperty('--ldr-bg',  cfg.bg  || t.bg);
+    root.style.setProperty('--ldr-fg',  cfg.fg  || t.fg);
+    root.style.setProperty('--ldr-dim', cfg.dim || t.dim);
+    root.style.setProperty('--ldr-size',  cfg.size + 'px');
+    root.style.setProperty('--ldr-width', Math.max(2, cfg.width) + 'px');
+    root.style.setProperty('--ldr-speed', String(cfg.speed));
+  }
+
+  /* ── 骨架生成 ─────────────────────────────────────────────── */
+  function _el(tag, cls, css) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (css) e.setAttribute('style', css);
+    return e;
+  }
+
+  function _svg(size, inner) {
+    var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('viewBox', '0 0 ' + (V * 24) + ' ' + (V * 24));
+    s.setAttribute('width', size);
+    s.setAttribute('height', size);
+    s.setAttribute('class', 'ldr-ring');
+    s.innerHTML = inner;
+    return s;
+  }
+
+  function _track() {
+    return '<circle class="ldr-track" cx="' + (V * 12) + '" cy="' + (V * 12) +
+           '" r="' + (V * 7) + '"></circle>';
+  }
+
+  function _build(cfg) {
+    var box, i, n;
+
+    switch (cfg.variant) {
+
+      /* iOS 圆弧：dash 伸缩 + 旋转 + 反向自转 */
+      case 'ios':
+        box = _svg(cfg.size,
+          _track() +
+          '<circle class="ldr-arc" cx="' + (V * 12) + '" cy="' + (V * 12) +
+          '" r="' + (V * 7) + '"></circle>');
+        return box;
+
+      /* 流光环 */
+      case 'flow':
+        box = _el('div', 'ldr-flow');
+        box.style.width = cfg.size + 'px';
+        box.style.height = cfg.size + 'px';
+        return box;
+
+      /* 三瓣 */
+      case 'lobes':
+        box = _el('div', 'ldr-lobes');
+        box.style.width = cfg.size + 'px';
+        box.style.height = cfg.size + 'px';
+        for (i = 0; i < 3; i++) box.appendChild(_el('div', 'ldr-lobe'));
+        return box;
+
+      /* 点阵（旧版外观，可配点数） */
+      case 'dots':
+        box = _el('div', 'ldr-dots');
+        n = Math.max(1, Math.min(12, cfg.dots | 0 || 7));
+        for (i = 0; i < n; i++) {
+          var d = _el('div', 'ldr-dot');
+          d.style.animationDelay = (i * 0.2) + 's';
+          box.appendChild(d);
+        }
+        return box;
+
+      /* 确定性进度环 */
+      case 'progress':
+        var off = DASH_FULL;
+        box = _svg(cfg.size,
+          '<defs><linearGradient id="ldrGrad" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0%" stop-color="var(--ldr-c1)"/>' +
+          '<stop offset="100%" stop-color="var(--ldr-c3)"/></linearGradient></defs>' +
+          _track() +
+          '<circle class="ldr-prog-arc" cx="' + (V * 12) + '" cy="' + (V * 12) +
+          '" r="' + (V * 7) + '" stroke-dasharray="' + DASH_FULL +
+          '" stroke-dashoffset="' + off + '"></circle>');
+        box._arc = box.querySelector('.ldr-prog-arc');
+        box._full = DASH_FULL;
+        return box;
+    }
+
+    /* 未知变体回退到 ios */
+    cfg.variant = 'ios';
+    return _build(cfg);
+  }
+
+  /* ── 装配到容器 ───────────────────────────────────────────── */
+  function mount(host, opts) {
+    if (!host) return null;
+    var cfg = {};
+    for (var k in _cfg) if (_cfg.hasOwnProperty(k)) cfg[k] = _cfg[k];
+    if (opts) for (var j in opts) if (cfg.hasOwnProperty(j)) cfg[j] = opts[j];
+
+    _applyTheme(host, cfg);
+    host.innerHTML = '';
+
+    var stage = _el('div', 'ldr-stage');
+    var node  = _build(cfg);
+    if (!node) return null;
+    stage.appendChild(node);
+
+    if (cfg.label) {
+      var lb = _el('div', 'ldr-label');
+      lb.textContent = cfg.label;
+      stage.appendChild(lb);
+    }
+    host.appendChild(stage);
+
+    /* 确定性进度的控制器 */
+    if (cfg.variant === 'progress') {
+      var pct = null;
+      if (cfg.label !== false) {
+        pct = _el('div', 'ldr-pct', 'margin-top:10px');
+        pct.textContent = '0%';
+        stage.appendChild(pct);
+      }
+      return {
+        node: node,
+        set: function (v) {
+          v = Math.max(0, Math.min(1, Number(v) || 0));
+          if (node._arc) {
+            node._arc.style.strokeDashoffset = String(node._full * (1 - v));
+          }
+          if (pct) pct.textContent = Math.round(v * 100) + '%';
+          return v;
+        },
+        done: function () { this.set(1); }
+      };
+    }
+
+    return { node: node };
+  }
+
+  /* ── 全屏遮罩 ─────────────────────────────────────────────── */
+  function _defaultHost() {
+    var ov = document.getElementById('ldr-overlay');
+    if (!ov) {
+      ov = _el('div', '');
+      ov.id = 'ldr-overlay';
+      ov.appendChild(_el('div', 'ldr-stage'));
+      document.body.appendChild(ov);
+    }
+    if (!ov.querySelector('#ldr-slot')) {
+      var slot = _el('div', '');
+      slot.id = 'ldr-slot';
+      var st = ov.querySelector('.ldr-stage') || ov.appendChild(_el('div', 'ldr-stage'));
+      st.insertBefore(slot, st.firstChild);
+    }
+    return document.getElementById('ldr-slot');
+  }
+
+  function _finish() {
+    var ov = document.getElementById('ldr-overlay');
+    if (ov) ov.classList.add('done');
+    if (typeof _cfg.onDone === 'function') {
+      try { _cfg.onDone(); } catch (e) {}
+    }
+  }
+
+  function init(opts) {
+    if (opts) for (var k in opts) if (_cfg.hasOwnProperty(k)) _cfg[k] = opts[k];
+
+    var ov = document.getElementById('ldr-overlay');
+    if (ov) ov.classList.remove('done');
+
+    var slot = _defaultHost();
+    _applyTheme(document.documentElement, _cfg);
+
+    /* 旧版点阵外观：若显式传了 dots 且没指定 variant，走 dots */
+    var inline = {};
+    for (var j in _cfg) inline[j] = _cfg[j];
+    var handle = mount(slot, inline);
+
+    var brand = document.getElementById('ldr-brand');
+    if (brand) {
+      if (_cfg.brand) { brand.textContent = _cfg.brand; brand.style.display = ''; }
+      else brand.style.display = 'none';
+    }
+
+    /* duration === 0 表示不自动关闭，由业务手动 hide() */
+    if (_cfg.duration > 0) {
+      var go = function () { setTimeout(_finish, _cfg.duration); };
+      if (document.readyState === 'complete') go();
+      else window.addEventListener('load', go, { once: true });
+    }
+    return handle;
+  }
+
+  return {
+    version: V,
+    init: init,
+    hide: _finish,
+    mount: mount,
+    config: function (o) {
+      if (o) for (var k in o) if (_cfg.hasOwnProperty(k)) _cfg[k] = o[k];
+      return _cfg;
+    }
+  };
+})();
+
+/* ══════════ 展示台渲染 ══════════ */
+(function () {
+  var cells = [
+    { cap:'iOS 圆弧 · 48px',      o:{ variant:'ios',   size:48 } },
+    { cap:'iOS 圆弧 · 76px',      o:{ variant:'ios',   size:76, width:6 } },
+    { cap:'流光环 · 56px',        o:{ variant:'flow',  size:56, width:6 } },
+    { cap:'三瓣呼吸 · 48px',      o:{ variant:'lobes', size:48 } },
+    { cap:'点阵 · 7 点（旧版）',  o:{ variant:'dots',  dots:7 } },
+    { cap:'进度环 · 平滑过渡',    o:{ variant:'progress', size:84, width:6 } }
+  ];
+  var grid = document.getElementById('grid');
+  var ctrls = [];
+
+  cells.forEach(function (c) {
+    var cell = document.createElement('div');
+    cell.className = 'cell';
+    grid.appendChild(cell);
+    var h = Loader.mount(cell, c.o);
+    if (h && h.set) ctrls.push(h);
+
+    var cap = document.createElement('div');
+    cap.className = 'cap';
+    cap.textContent = c.cap;
+    cell.appendChild(cap);
+  });
+
+  /* 进度环做往复演示，看得出缓动 */
+  if (ctrls.length) {
+    var t0 = performance.now();
+    (function loop(now) {
+      var p = ((now - t0) / 2600) % 1;
+      var eased = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2;   // easeInOutQuad
+      ctrls.forEach(function (h) { h.set(eased); });
+      requestAnimationFrame(loop);
+    })(t0);
+  }
+})();
+</script>
+</body>
+</html>

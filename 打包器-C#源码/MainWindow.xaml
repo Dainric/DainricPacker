@@ -1,0 +1,1256 @@
+<!-- Dainric 打包器 · 原生 Windows 版 -->
+<!-- 作者: Dainric -->
+<Window x:Class="Dainric.Packer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dainric 打包器"
+        Width="1200" Height="800" MinWidth="1040" MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Bg}"
+        TextOptions.TextFormattingMode="Ideal"
+        UseLayoutRounding="True"
+        AllowDrop="True"
+        Drop="OnDrop"
+        DragOver="OnDragOver">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- ══════════ 顶栏 ══════════ -->
+    <Border Grid.Row="0" Background="{StaticResource Surface}" Height="52"
+            MouseLeftButtonDown="TitleBarDrag">
+      <Grid>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                    Margin="16,0">
+          <Path Data="M6,2 L16,10 L6,18 Z" Fill="{StaticResource Blue}"
+                VerticalAlignment="Center"/>
+          <TextBlock Text="Dainric 打包器" Style="{StaticResource H1}"
+                     Margin="10,0,0,0" VerticalAlignment="Center"/>
+          <TextBlock x:Name="VerLabel" Text="v… · 原生版"
+                     Style="{StaticResource Caption}"
+                     Margin="8,2,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                    VerticalAlignment="Center" Margin="0,0,10,0">
+          <Button x:Name="BtnAbout" Content="关于" Style="{StaticResource GhostButton}"
+                  Click="ShowAbout" Margin="0,0,4,0"/>
+          <TextBlock x:Name="TopStatus" Style="{StaticResource Caption}"
+                     VerticalAlignment="Center" Margin="0,0,10,0"/>
+          <Button x:Name="BtnAbort" Content="停止" Style="{StaticResource DangerButton}"
+                  Click="AbortBuild" Margin="6,0,0,0" IsEnabled="False"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border Grid.Row="1" Style="{StaticResource HairLine}"/>
+
+    <!-- ══════════ 主体 ══════════ -->
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="208"/>
+        <ColumnDefinition Width="1"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- ── 侧栏 ── -->
+      <Border Grid.Column="0" Background="{StaticResource Surface}">
+        <Grid>
+          <StackPanel VerticalAlignment="Top" Margin="0,10,0,0">
+            <Border x:Name="NavSingle" Style="{StaticResource NavItem}"
+                    Background="{StaticResource Blue}"
+                    MouseLeftButtonUp="ShowSingle">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="M6,1 L14,9 L6,17 Z" Fill="White"
+                      VerticalAlignment="Center"/>
+                <TextBlock x:Name="NavSingleText" Text="单文件打包"
+                           Foreground="White" FontSize="13"
+                           FontFamily="{StaticResource UiFont}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Border>
+
+            <Border x:Name="NavDeps" Style="{StaticResource NavItem}"
+                    MouseLeftButtonUp="ShowDeps">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="M2,15 L7,10 L11,13 L17,4" Stroke="{StaticResource Label2}"
+                      StrokeThickness="1.6" Fill="Transparent"
+                      VerticalAlignment="Center"/>
+                <TextBlock x:Name="NavDepsText" Text="依赖 / 历史"
+                           Foreground="{StaticResource Label}" FontSize="13"
+                           FontFamily="{StaticResource UiFont}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Border>
+
+            <Border x:Name="NavRuntime" Style="{StaticResource NavItem}"
+                    MouseLeftButtonUp="ShowRuntime">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="M12,3 A9,9 0 1,1 3,12 M12,3 L12,12 L18,17"
+                      Stroke="{StaticResource Label2}" StrokeThickness="1.6"
+                      Fill="Transparent" VerticalAlignment="Center"/>
+                <TextBlock x:Name="NavRuntimeText" Text="运行时"
+                           Foreground="{StaticResource Label}" FontSize="13"
+                           FontFamily="{StaticResource UiFont}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Border>
+
+            <Border x:Name="NavBatch" Style="{StaticResource NavItem}"
+                    MouseLeftButtonUp="ShowBatch">
+              <StackPanel Orientation="Horizontal">
+                <Path Data="M2,2 H8 V8 H2 Z M12,2 H18 V8 H12 Z M2,12 H8 V18 H2 Z M12,12 H18 V18 H12 Z"
+                      Fill="{StaticResource Label2}" VerticalAlignment="Center"
+                      StrokeThickness="0"/>
+                <TextBlock x:Name="NavBatchText" Text="批量打包"
+                           Foreground="{StaticResource Label}" FontSize="13"
+                           FontFamily="{StaticResource UiFont}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="1" Background="{StaticResource Hair}"/>
+
+      <!-- ── 内容区 ── -->
+      <Grid Grid.Column="2" x:Name="ContentHost">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition x:Name="FormCol" Width="*"/>
+          <ColumnDefinition x:Name="SplitCol" Width="6"/>
+          <ColumnDefinition x:Name="SideCol" Width="392"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 左：表单 -->
+        <ScrollViewer x:Name="SingleForm" Grid.Column="0"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="18,14,9,14">
+          <StackPanel>
+
+            <!-- 脚本 -->
+            <Border Style="{StaticResource Card}">
+              <StackPanel>
+                <Grid>
+                  <TextBlock Text="脚本" Style="{StaticResource H2}"/>
+                  <TextBlock x:Name="ScriptHint" Text="未选择"
+                             Style="{StaticResource Caption}"
+                             HorizontalAlignment="Right"/>
+                </Grid>
+
+                <Border x:Name="ScriptRow" Background="Transparent"
+                        CornerRadius="8" Padding="8,6" Margin="0,8,0,0"
+                        Cursor="Hand" MouseLeftButtonUp="PickScript">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto"/>
+                      <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="26" Height="26" CornerRadius="7"
+                            Background="{StaticResource Blue}">
+                      <Path Data="M5,2 H11 L15,6 V18 H5 Z" Stroke="White"
+                            StrokeThickness="1.6" Fill="Transparent"
+                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0"
+                                VerticalAlignment="Center">
+                      <TextBlock x:Name="ScriptName" Text="点击选择 .py 文件"
+                                 Style="{StaticResource FieldLabel}"/>
+                      <TextBlock x:Name="ScriptPath" Text=""
+                                 Style="{StaticResource Caption}"
+                                 TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+
+                <Border Background="#240A84FF" CornerRadius="8" Padding="10,7"
+                        Margin="0,8,0,0">
+                  <TextBlock Text="拖入 .py 文件即可载入 · 支持从资源管理器直接拖拽"
+                             FontSize="11.5" Foreground="{StaticResource Blue}"
+                             FontFamily="{StaticResource UiFont}"
+                             TextWrapping="Wrap"/>
+                </Border>
+
+                <TextBlock x:Name="ScriptAnalysis" Text="" Visibility="Collapsed"
+                           Style="{StaticResource Caption}" Margin="0,8,0,0"
+                           TextWrapping="Wrap" Foreground="{StaticResource Label2}"/>
+
+                <Grid Margin="0,6,0,0">
+                  <TextBlock Text="可选：先用打包引擎的 Python 跑一遍脚本"
+                             Style="{StaticResource Caption}"
+                             VerticalAlignment="Center"/>
+                  <Button x:Name="BtnTrialRun" Content="试运行脚本"
+                          Style="{StaticResource GhostButton}"
+                          HorizontalAlignment="Right" Click="TrialRunScript"
+                          ToolTip="用当前运行时启动一次脚本（会弹出控制台窗口）"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- 输出 -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+              <StackPanel>
+                <TextBlock Text="输出" Style="{StaticResource H2}"/>
+                <Grid Margin="0,8,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="64"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="38"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="38"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="38"/>
+                  </Grid.RowDefinitions>
+
+                  <TextBlock Grid.Row="0" Grid.Column="0" Text="名称"
+                             Style="{StaticResource FieldLabel}"/>
+                  <Border Grid.Row="0" Grid.Column="1" x:Name="OutNameHost"
+                          Style="{StaticResource InputHost}">
+                    <TextBox x:Name="OutName" Style="{StaticResource Input}"
+                             HorizontalAlignment="Stretch"
+                             VerticalAlignment="Center"/>
+                  </Border>
+
+                  <Border Grid.Row="1" Grid.ColumnSpan="2"
+                          Style="{StaticResource HairLine}"/>
+
+                  <TextBlock Grid.Row="2" Grid.Column="0" Text="版本"
+                             Style="{StaticResource FieldLabel}"/>
+                  <Grid Grid.Row="2" Grid.Column="1">
+                    <TextBlock x:Name="VerText" Text="未设置"
+                               Style="{StaticResource Caption}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center" Margin="0,0,66,0"/>
+                    <Button Content="设置" Style="{StaticResource GhostButton}"
+                            HorizontalAlignment="Right" Click="SetVersion"/>
+                  </Grid>
+
+                  <Border Grid.Row="3" Grid.ColumnSpan="2"
+                          Style="{StaticResource HairLine}"/>
+
+                  <TextBlock Grid.Row="4" Grid.Column="0" Text="目录"
+                             Style="{StaticResource FieldLabel}"/>
+                  <Grid Grid.Row="4" Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" x:Name="OutDirHost"
+                            Style="{StaticResource InputHost}">
+                      <TextBox x:Name="OutDir" Style="{StaticResource Input}"
+                               VerticalAlignment="Center"/>
+                    </Border>
+                    <Button Grid.Column="1" Content="浏览"
+                            Style="{StaticResource GhostButton}"
+                            Click="PickOutDir" Margin="6,0,0,0"/>
+                  </Grid>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- 构建选项 -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+              <StackPanel>
+                <TextBlock Text="构建选项" Style="{StaticResource H2}"/>
+
+                <Grid Margin="0,10,0,0" Height="34">
+                  <TextBlock Text="打包形态" Style="{StaticResource FieldLabel}"/>
+                  <StackPanel Orientation="Horizontal"
+                              HorizontalAlignment="Right">
+                    <RadioButton x:Name="RbOneFile" Content="单文件" IsChecked="True"
+                                 Foreground="{StaticResource Label}"
+                                 FontFamily="{StaticResource UiFont}" FontSize="12.5"
+                                 VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <RadioButton x:Name="RbOneDir" Content="目录"
+                                 Foreground="{StaticResource Label}"
+                                 FontFamily="{StaticResource UiFont}" FontSize="12.5"
+                                 VerticalAlignment="Center"/>
+                  </StackPanel>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="窗口模式" Style="{StaticResource FieldLabel}"/>
+                  <StackPanel Orientation="Horizontal"
+                              HorizontalAlignment="Right">
+                    <RadioButton x:Name="RbAuto" Content="自动" IsChecked="True"
+                                 Foreground="{StaticResource Label}"
+                                 FontFamily="{StaticResource UiFont}" FontSize="12.5"
+                                 VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <RadioButton x:Name="RbConsole" Content="控制台"
+                                 Foreground="{StaticResource Label}"
+                                 FontFamily="{StaticResource UiFont}" FontSize="12.5"
+                                 VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <RadioButton x:Name="RbNoConsole" Content="无控制台"
+                                 Foreground="{StaticResource Label}"
+                                 FontFamily="{StaticResource UiFont}" FontSize="12.5"
+                                 VerticalAlignment="Center"/>
+                  </StackPanel>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="管理员提权 (UAC)"
+                             Style="{StaticResource FieldLabel}"/>
+                  <CheckBox x:Name="ChkUac" Style="{StaticResource IosSwitch}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="清理临时文件" Style="{StaticResource FieldLabel}"/>
+                  <CheckBox x:Name="ChkClean" IsChecked="True"
+                            Style="{StaticResource IosSwitch}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="打包后自检产物" Style="{StaticResource FieldLabel}"/>
+                  <CheckBox x:Name="ChkSelfTest" IsChecked="True"
+                            Style="{StaticResource IosSwitch}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            ToolTip="打包完成后启动一次产物，确认它真的能跑起来"/>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="打包前检查依赖" Style="{StaticResource FieldLabel}"/>
+                  <CheckBox x:Name="ChkCheckDeps" IsChecked="True"
+                            Style="{StaticResource IosSwitch}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            ToolTip="打包前确认脚本 import 的模块本机都装好了"/>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="自检参数" Style="{StaticResource FieldLabel}"
+                             ToolTip="产物必须带命令行参数才能启动时，填在这里"/>
+                  <Border x:Name="TestArgsHost" Style="{StaticResource InputHost}"
+                          HorizontalAlignment="Right" Width="300">
+                    <TextBox x:Name="TestArgs" Text=""
+                             Style="{StaticResource Input}"
+                             VerticalAlignment="Center"
+                             ToolTip="留空即可。仅在产物必须带参数才启动时才需要填"/>
+                  </Border>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="依赖" Style="{StaticResource FieldLabel}"/>
+                  <StackPanel Orientation="Horizontal"
+                              HorizontalAlignment="Right">
+                    <Button x:Name="BtnCheckDeps" Content="检查依赖"
+                            Style="{StaticResource GhostButton}"
+                            Click="CheckDepsNow" Margin="0,0,8,0"/>
+                    <Button x:Name="BtnInstallDeps" Content="安装缺失依赖"
+                            Style="{StaticResource SecondaryButton}"
+                            Click="InstallDeps"/>
+                  </StackPanel>
+                </Grid>
+
+                <Grid Height="34">
+                  <TextBlock Text="打包超时(秒)" Style="{StaticResource FieldLabel}"/>
+                  <Border x:Name="TimeoutHost" Style="{StaticResource InputHost}"
+                          Width="96" HorizontalAlignment="Right">
+                    <TextBox x:Name="Timeout" Text="1800"
+                             Style="{StaticResource Input}"
+                             VerticalAlignment="Center"/>
+                  </Border>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- 高级参数 / 数据文件 -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+              <StackPanel>
+                <TextBlock Text="高级参数（可选）" Style="{StaticResource H2}"/>
+                <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0"
+                           TextWrapping="Wrap"
+                           Text="留空即可。自动重试仍失败时，再在这里补 hidden-import、数据文件或额外参数。"/>
+
+                <Grid Margin="0,8,0,0" Height="32">
+                  <TextBlock Text="hidden-import" Style="{StaticResource FieldLabel}"/>
+                  <Border x:Name="AdvHiddenHost" Style="{StaticResource InputHost}"
+                          HorizontalAlignment="Right" Width="360">
+                    <TextBox x:Name="AdvHidden" Style="{StaticResource Input}"
+                             VerticalAlignment="Center"
+                             ToolTip="多个模块用逗号或空格分隔，例如 pandas._libs.tslibs"/>
+                  </Border>
+                </Grid>
+                <Grid Height="32">
+                  <TextBlock Text="排除模块" Style="{StaticResource FieldLabel}"/>
+                  <Border x:Name="AdvExcludeHost" Style="{StaticResource InputHost}"
+                          HorizontalAlignment="Right" Width="360">
+                    <TextBox x:Name="AdvExclude" Style="{StaticResource Input}"
+                             VerticalAlignment="Center"
+                             ToolTip="多个模块用逗号或空格分隔，例如 matplotlib.tests"/>
+                  </Border>
+                </Grid>
+                <Grid Height="32">
+                  <TextBlock Text="额外参数" Style="{StaticResource FieldLabel}"/>
+                  <Border x:Name="AdvExtraHost" Style="{StaticResource InputHost}"
+                          HorizontalAlignment="Right" Width="360">
+                    <TextBox x:Name="AdvExtra" Style="{StaticResource Input}"
+                             VerticalAlignment="Center"
+                             ToolTip="原样传给 PyInstaller，例如 --collect-all mylib"/>
+                  </Border>
+                </Grid>
+
+                <Grid Height="30" Margin="0,6,0,0">
+                  <TextBlock Text="附加数据文件" Style="{StaticResource FieldLabel}"/>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="添加文件" Style="{StaticResource GhostButton}"
+                            Click="DataAddFiles"/>
+                    <Button Content="添加目录" Style="{StaticResource GhostButton}"
+                            Click="DataAddFolder"/>
+                    <Button Content="移除" Style="{StaticResource GhostButton}"
+                            Click="DataRemove"/>
+                    <Button Content="用法代码" Style="{StaticResource GhostButton}"
+                            Click="DataCopySnippet"
+                            ToolTip="复制读取 sys._MEIPASS 里资源文件的代码片段"/>
+                  </StackPanel>
+                </Grid>
+                <ListBox x:Name="DataList" Height="64" Margin="0,2,0,0"
+                         Background="{StaticResource Surface2}" BorderThickness="0"
+                         Foreground="{StaticResource Label2}"
+                         FontFamily="{StaticResource MonoFont}" FontSize="11"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0"
+                           TextWrapping="Wrap"
+                           Text="文件会打进产物，运行时位于 sys._MEIPASS 下；用「用法代码」里的 resource_path() 读取。"/>
+
+                <Border Style="{StaticResource HairLine}" Margin="0,10,0,0"/>
+                <TextBlock Text="代码签名（可选）" Style="{StaticResource FieldLabel}"
+                           Margin="0,8,0,0"/>
+                <TextBlock Style="{StaticResource Caption}" Margin="0,3,0,0"
+                           TextWrapping="Wrap"
+                           Text="打包成功后用 Windows Authenticode 给产物签名，缓解杀软误报。只需 .pfx 证书和密码，不依赖 Windows SDK。"/>
+                <Grid Height="32" Margin="0,4,0,0">
+                  <TextBlock Text="证书 (.pfx)" Style="{StaticResource FieldLabel}"/>
+                  <Grid HorizontalAlignment="Right" Width="360">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource InputHost}">
+                      <TextBox x:Name="AdvSignPfx" Style="{StaticResource Input}"
+                               VerticalAlignment="Center"/>
+                    </Border>
+                    <Button Grid.Column="1" Content="浏览"
+                            Style="{StaticResource GhostButton}"
+                            Click="PickSignPfx" Margin="6,0,0,0"/>
+                  </Grid>
+                </Grid>
+                <Grid Height="32">
+                  <TextBlock Text="证书密码" Style="{StaticResource FieldLabel}"/>
+                  <Border x:Name="AdvSignPwdHost"
+                          Style="{StaticResource InputHost}"
+                          HorizontalAlignment="Right" Width="360">
+                    <PasswordBox x:Name="AdvSignPwd" Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="{StaticResource Label}"
+                                 CaretBrush="{StaticResource Blue}"
+                                 FontFamily="{StaticResource MonoFont}"
+                                 FontSize="12.5" VerticalContentAlignment="Center"/>
+                  </Border>
+                </Grid>
+                <Grid Height="32">
+                  <TextBlock Text="时间戳 URL" Style="{StaticResource FieldLabel}"/>
+                  <Border Style="{StaticResource InputHost}"
+                          HorizontalAlignment="Right" Width="360">
+                    <TextBox x:Name="AdvSignTs" Style="{StaticResource Input}"
+                             VerticalAlignment="Center"
+                             ToolTip="可选，例如 http://timestamp.digicert.com"/>
+                  </Border>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- 图标 -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+              <Grid Height="30">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                  <Border Width="26" Height="26" CornerRadius="7"
+                          Background="#FFBF5AF2">
+                    <Path Data="M4,4 H20 V20 H4 Z M7,9 A1.6,1.6 0 1,0 10.2,9 A1.6,1.6 0 1,0 7,9 M5,19 L11,12 L20,19"
+                          Stroke="White" StrokeThickness="1.5" Fill="Transparent"
+                          VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                  </Border>
+                  <TextBlock x:Name="IconText" Text="使用默认图标"
+                             Style="{StaticResource Caption}" Margin="10,0,0,0"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                  <Button Content="选择" Style="{StaticResource GhostButton}"
+                          Click="PickIcon"/>
+                  <Button Content="默认" Style="{StaticResource GhostButton}"
+                          Click="ResetIcon"/>
+                </StackPanel>
+              </Grid>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- 分隔条：可左右拖动，调整左侧表单与右侧日志的宽度 -->
+        <GridSplitter x:Name="LogSplitter" Grid.Column="1" Width="6"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Background="Transparent" Cursor="SizeWE"
+                      ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"/>
+
+        <!-- 右：状态 + 日志 -->
+        <Grid x:Name="SidePanel" Grid.Column="2" Margin="9,14,18,14">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+
+          <!-- 状态卡 -->
+          <Border Grid.Row="0" Background="{StaticResource Surface2}"
+                  CornerRadius="14" Padding="16,14">
+            <StackPanel>
+              <TextBlock x:Name="RunTitle" Text="就绪"
+                         Style="{StaticResource H2}"
+                         HorizontalAlignment="Center"/>
+              <TextBlock x:Name="RunSub" Text="选择脚本后开始"
+                         Style="{StaticResource Caption}"
+                         HorizontalAlignment="Center" Margin="0,3,0,0"/>
+
+              <ProgressBar x:Name="Progress" Style="{StaticResource ThinProgress}"
+                           Minimum="0" Maximum="100" Value="0" Margin="0,14,0,0"/>
+              <TextBlock x:Name="ProgressText" Text="0%"
+                         Style="{StaticResource Caption}"
+                         HorizontalAlignment="Center" Margin="0,6,0,0"/>
+
+              <Grid Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Background="{StaticResource Surface3}"
+                        CornerRadius="10" Margin="2" Padding="8,7">
+                  <StackPanel>
+                    <TextBlock x:Name="StatElapsed" Text="—" Foreground="White"
+                               FontSize="15" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="已用" Style="{StaticResource Caption}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Background="{StaticResource Surface3}"
+                        CornerRadius="10" Margin="2" Padding="8,7">
+                  <StackPanel>
+                    <TextBlock x:Name="StatSize" Text="—" Foreground="White"
+                               FontSize="15" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="产物" Style="{StaticResource Caption}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Background="{StaticResource Surface3}"
+                        CornerRadius="10" Margin="2" Padding="8,7">
+                  <StackPanel>
+                    <TextBlock x:Name="StatEngine" Text="—" Foreground="White"
+                               FontSize="15" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="引擎" Style="{StaticResource Caption}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </Grid>
+
+              <Border x:Name="ResultPanel" Background="{StaticResource Surface3}"
+                      CornerRadius="10" Margin="0,12,0,0" Padding="10,8"
+                      Visibility="Collapsed">
+                <StackPanel>
+                  <TextBlock x:Name="ResultTitle" Text="打包结果"
+                             Style="{StaticResource H2}" FontSize="12"/>
+                  <TextBlock x:Name="ResultInfo" Style="{StaticResource Caption}"
+                             TextWrapping="Wrap" Margin="0,4,0,0"/>
+                  <TextBlock x:Name="ResultHash" Style="{StaticResource Caption}"
+                             FontFamily="{StaticResource MonoFont}"
+                             TextWrapping="Wrap" Margin="0,3,0,0"
+                             Visibility="Collapsed"/>
+                  <WrapPanel Margin="0,6,0,0">
+                    <Button x:Name="BtnResultOpen" Content="打开位置"
+                            Style="{StaticResource GhostButton}" Padding="8,3"
+                            FontSize="11.5" Click="ResultOpen"/>
+                    <Button x:Name="BtnResultRun" Content="运行产物"
+                            Style="{StaticResource GhostButton}" Padding="8,3"
+                            FontSize="11.5" Click="ResultRun"/>
+                    <Button x:Name="BtnResultCopyPath" Content="复制路径"
+                            Style="{StaticResource GhostButton}" Padding="8,3"
+                            FontSize="11.5" Click="ResultCopyPath"/>
+                    <Button x:Name="BtnResultDiag" Content="复制诊断"
+                            Style="{StaticResource GhostButton}" Padding="8,3"
+                            FontSize="11.5" Click="ResultCopyDiag"
+                            Visibility="Collapsed"/>
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Border>
+
+          <!-- 日志卡 -->
+          <Border Grid.Row="1" Style="{StaticResource CardFlat}" Margin="0,12,0,0">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+
+              <Grid Grid.Row="0" Margin="12,0">
+                <TextBlock Text="输出日志" Style="{StaticResource H2}"
+                           VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                  <Button x:Name="BtnLogExpand" Content="放大"
+                          Style="{StaticResource GhostButton}"
+                          Click="ToggleLogExpand"
+                          ToolTip="把日志面板放大到整行（Esc 还原）"/>
+                  <Button Content="导出" Style="{StaticResource GhostButton}"
+                          Click="ExportLog" ToolTip="把日志另存为 .log 文件"/>
+                  <Button Content="复制" Style="{StaticResource GhostButton}"
+                          Click="CopyLog" ToolTip="复制全部日志（Ctrl+Shift+C）"/>
+                  <Button Content="清空" Style="{StaticResource GhostButton}"
+                          Click="ClearLog" ToolTip="清空日志（Ctrl+L）"/>
+                </StackPanel>
+              </Grid>
+
+              <Grid Grid.Row="1" Margin="12,0,12,8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Height="26" Background="{StaticResource Surface2}"
+                        CornerRadius="7" Padding="8,0">
+                  <Grid>
+                    <TextBox x:Name="LogSearch" Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{StaticResource Label}"
+                             CaretBrush="{StaticResource Label}"
+                             FontFamily="{StaticResource UiFont}" FontSize="11.5"
+                             VerticalAlignment="Center" TextChanged="LogSearchChanged"
+                             ToolTip="输入关键字过滤日志"/>
+                    <TextBlock x:Name="LogSearchHint" Text="搜索日志…"
+                               IsHitTestVisible="False"
+                               Foreground="{StaticResource Label3}"
+                               FontFamily="{StaticResource UiFont}" FontSize="11.5"
+                               VerticalAlignment="Center"/>
+                  </Grid>
+                </Border>
+                <ToggleButton x:Name="ChkOnlyIssues" Grid.Column="1" Content="只看异常"
+                              Style="{StaticResource FilterToggle}" Margin="6,0,0,0"
+                              VerticalAlignment="Center" Click="LogFilterChanged"
+                              ToolTip="只显示警告和错误"/>
+                <ToggleButton x:Name="ChkAutoScroll" Grid.Column="2" Content="自动滚动"
+                              Style="{StaticResource FilterToggle}" Margin="2,0,0,0"
+                              VerticalAlignment="Center" IsChecked="True"
+                              ToolTip="新日志出现时自动滚到底部"/>
+              </Grid>
+
+              <Border Grid.Row="2" Style="{StaticResource HairLine}"/>
+
+              <RichTextBox x:Name="LogBox" Grid.Row="3" IsReadOnly="True"
+                           Background="Transparent" BorderThickness="0"
+                           Foreground="{StaticResource Label2}"
+                           FontFamily="{StaticResource MonoFont}"
+                           FontSize="11.5" Padding="12,8"
+                           VerticalScrollBarVisibility="Auto"
+                           IsDocumentEnabled="False">
+                <RichTextBox.Resources>
+                  <Style TargetType="ScrollBar"
+                         BasedOn="{StaticResource ThinScroll}"/>
+                </RichTextBox.Resources>
+              </RichTextBox>
+            </Grid>
+          </Border>
+        </Grid>
+
+        <!-- ══════════ 批量打包页 ══════════ -->
+        <Grid x:Name="ViewBatch" Grid.Column="0" Grid.ColumnSpan="3"
+              Visibility="Collapsed">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="392"/>
+          </Grid.ColumnDefinitions>
+
+          <Grid Grid.Column="0" Margin="18,14,9,14">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource CardFlat}">
+              <Grid>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="44"/>
+                  <RowDefinition Height="1"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="14,0">
+                  <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="文件队列" Style="{StaticResource H2}"/>
+                    <Border Background="{StaticResource Surface2}" CornerRadius="9"
+                            Padding="8,2" Margin="8,0,0,0">
+                      <TextBlock x:Name="QueueCount" Text="0 个文件"
+                                 Style="{StaticResource Caption}"/>
+                    </Border>
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                              VerticalAlignment="Center">
+                    <Button Content="添加" Style="{StaticResource GhostButton}"
+                            Click="QueueAdd"/>
+                    <Button Content="移除" Style="{StaticResource GhostButton}"
+                            Click="QueueRemove"/>
+                    <Button Content="清空" Style="{StaticResource DangerButton}"
+                            Click="QueueClear" Padding="10,4" FontSize="12.5"/>
+                  </StackPanel>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource HairLine}"/>
+
+                <ListBox x:Name="QueueList" Grid.Row="2" Background="Transparent"
+                         BorderThickness="0" Foreground="{StaticResource Label}"
+                         FontFamily="{StaticResource MonoFont}" FontSize="12"
+                         SelectionMode="Extended"
+                         AllowDrop="True" Drop="QueueDrop" DragOver="OnDragOver"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                  <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                      <Setter Property="Padding" Value="12,7"/>
+                      <Setter Property="Foreground"
+                              Value="{StaticResource Label2}"/>
+                      <Setter Property="Template">
+                        <Setter.Value>
+                          <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="ib" Background="Transparent"
+                                    CornerRadius="6" Margin="6,1" Padding="{TemplateBinding Padding}">
+                              <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                              <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ib" Property="Background"
+                                        Value="{StaticResource Surface2}"/>
+                              </Trigger>
+                              <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ib" Property="Background"
+                                        Value="#300A84FF"/>
+                              </Trigger>
+                            </ControlTemplate.Triggers>
+                          </ControlTemplate>
+                        </Setter.Value>
+                      </Setter>
+                    </Style>
+                  </ListBox.ItemContainerStyle>
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Mark}" VerticalAlignment="Center">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                              <Setter Property="Foreground"
+                                      Value="{StaticResource Label2}"/>
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding State}" Value="ok">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Green}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding State}" Value="fail">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Pink}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding State}" Value="run">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Blue}"/>
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                        <StackPanel Grid.Column="1" Margin="8,0,8,0">
+                          <TextBlock Text="{Binding Name}"
+                                     Foreground="{StaticResource Label}"
+                                     TextTrimming="CharacterEllipsis"/>
+                          <TextBlock Text="{Binding Detail}"
+                                     Style="{StaticResource Caption}"
+                                     TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{Binding Status}"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{StaticResource UiFont}"
+                                   FontSize="11.5">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                              <Setter Property="Foreground"
+                                      Value="{StaticResource Label2}"/>
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding State}" Value="ok">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Green}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding State}" Value="fail">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Pink}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding State}" Value="run">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Blue}"/>
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                      </Grid>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Border Grid.Row="3" Background="#1A0A84FF" Padding="12,8">
+                  <TextBlock Text="提示：可直接把多个 .py 拖到这里；打包顺序按列表自上而下"
+                             FontSize="11.5" Foreground="{StaticResource Blue}"
+                             FontFamily="{StaticResource UiFont}" TextWrapping="Wrap"/>
+                </Border>
+              </Grid>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,12,0,0">
+              <StackPanel>
+                <TextBlock Text="批量配置" Style="{StaticResource H2}"/>
+                <Grid Margin="0,8,0,0" Height="36">
+                  <TextBlock Text="输出目录" Style="{StaticResource FieldLabel}"/>
+                  <Grid HorizontalAlignment="Right" Width="300">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="BatchOutDirHost"
+                            Style="{StaticResource InputHost}">
+                      <TextBox x:Name="BatchOutDir" Style="{StaticResource Input}"
+                               VerticalAlignment="Center"/>
+                    </Border>
+                    <Button Grid.Column="1" Content="浏览"
+                            Style="{StaticResource GhostButton}"
+                            Click="PickBatchOutDir" Margin="6,0,0,0"/>
+                  </Grid>
+                </Grid>
+                <Grid Height="36">
+                  <TextBlock Text="逐个状态" Style="{StaticResource FieldLabel}"/>
+                  <TextBlock x:Name="BatchStatus" Text="等待开始"
+                             Style="{StaticResource Caption}"
+                             HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
+                <Grid Height="36">
+                  <TextBlock Text="失败处理" Style="{StaticResource FieldLabel}"/>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnRetryFailed" Content="只重跑失败项"
+                            Style="{StaticResource GhostButton}"
+                            Click="RetryFailed" IsEnabled="False"/>
+                    <Button x:Name="BtnExportBatch" Content="导出结果"
+                            Style="{StaticResource GhostButton}"
+                            Click="ExportBatch" IsEnabled="False"/>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <!-- 右栏用与单文件页相同的三宫格 + 日志 -->
+          <Grid Grid.Column="1" Margin="9,14,18,14">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="{StaticResource Surface2}"
+                    CornerRadius="14" Padding="16,14">
+              <StackPanel>
+                <TextBlock x:Name="BatchRunTitle" Text="批量打包"
+                           Style="{StaticResource H2}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock x:Name="BatchRunSub" Text="加入脚本后开始"
+                           Style="{StaticResource Caption}"
+                           HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                <ProgressBar x:Name="BatchProgress"
+                             Style="{StaticResource ThinProgress}"
+                             Minimum="0" Maximum="100" Value="0" Margin="0,14,0,0"/>
+                <TextBlock x:Name="BatchProgressText" Text="0%"
+                           Style="{StaticResource Caption}"
+                           HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                <Grid Margin="0,12,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Border Grid.Column="0" Background="{StaticResource Surface3}"
+                          CornerRadius="10" Margin="2" Padding="8,7">
+                    <StackPanel>
+                      <TextBlock x:Name="BatchDone" Text="0/0" Foreground="White"
+                                 FontSize="15" FontWeight="SemiBold"
+                                 HorizontalAlignment="Center"/>
+                      <TextBlock Text="进度" Style="{StaticResource Caption}"
+                                 HorizontalAlignment="Center"/>
+                    </StackPanel>
+                  </Border>
+                  <Border Grid.Column="1" Background="{StaticResource Surface3}"
+                          CornerRadius="10" Margin="2" Padding="8,7">
+                    <StackPanel>
+                      <TextBlock x:Name="BatchOk" Text="0" Foreground="White"
+                                 FontSize="15" FontWeight="SemiBold"
+                                 HorizontalAlignment="Center"/>
+                      <TextBlock Text="成功" Style="{StaticResource Caption}"
+                                 HorizontalAlignment="Center"/>
+                    </StackPanel>
+                  </Border>
+                  <Border Grid.Column="2" Background="{StaticResource Surface3}"
+                          CornerRadius="10" Margin="2" Padding="8,7">
+                    <StackPanel>
+                      <TextBlock x:Name="BatchFail" Text="0" Foreground="White"
+                                 FontSize="15" FontWeight="SemiBold"
+                                 HorizontalAlignment="Center"/>
+                      <TextBlock Text="失败" Style="{StaticResource Caption}"
+                                 HorizontalAlignment="Center"/>
+                    </StackPanel>
+                  </Border>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource CardFlat}" Margin="0,12,0,0">
+              <Grid>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="44"/>
+                  <RowDefinition Height="1"/>
+                  <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="14,0">
+                  <TextBlock Text="批量日志" Style="{StaticResource H2}"
+                             VerticalAlignment="Center"/>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                              VerticalAlignment="Center">
+                    <Button Content="复制" Style="{StaticResource GhostButton}"
+                            Click="CopyLog"/>
+                    <Button Content="清空" Style="{StaticResource GhostButton}"
+                            Click="ClearLog"/>
+                  </StackPanel>
+                </Grid>
+                <Border Grid.Row="1" Style="{StaticResource HairLine}"/>
+                <RichTextBox x:Name="BatchLogBox" Grid.Row="2" IsReadOnly="True"
+                             Background="Transparent" BorderThickness="0"
+                             Foreground="{StaticResource Label2}"
+                             FontFamily="{StaticResource MonoFont}"
+                             FontSize="11.5" Padding="12,8"
+                             VerticalScrollBarVisibility="Auto"
+                             IsDocumentEnabled="False">
+                  <RichTextBox.Resources>
+                    <Style TargetType="ScrollBar"
+                           BasedOn="{StaticResource ThinScroll}"/>
+                  </RichTextBox.Resources>
+                </RichTextBox>
+              </Grid>
+            </Border>
+          </Grid>
+        </Grid>
+
+        <!-- ══════════ 依赖分析 + 打包历史 ══════════ -->
+        <Grid x:Name="ViewDeps" Grid.Column="0" Grid.ColumnSpan="3"
+              Visibility="Collapsed">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="392"/>
+          </Grid.ColumnDefinitions>
+
+          <Border Grid.Column="0" Style="{StaticResource Card}" Margin="18,14,9,14">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <Grid Grid.Row="0" Margin="0,2,0,10">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                  <TextBlock Text="依赖分析" Style="{StaticResource H2}"/>
+                  <TextBlock x:Name="DepTarget" Text="未选择脚本"
+                             Style="{StaticResource Caption}" Margin="10,0,0,0"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Content="重新分析" Style="{StaticResource GhostButton}"
+                        HorizontalAlignment="Right" Click="AnalyzeDeps"/>
+              </Grid>
+              <Border Grid.Row="1" Style="{StaticResource HairLine}"/>
+              <TextBox x:Name="DepBox" Grid.Row="2" IsReadOnly="True"
+                       Background="{StaticResource Surface2}"
+                       Foreground="{StaticResource Label}"
+                       BorderThickness="0" FontFamily="{StaticResource MonoFont}"
+                       FontSize="12" Padding="14,12" TextWrapping="NoWrap"
+                       AcceptsReturn="True"
+                       VerticalScrollBarVisibility="Auto"
+                       HorizontalScrollBarVisibility="Auto"
+                       Margin="0,10,0,0"/>
+            </Grid>
+          </Border>
+
+          <Border Grid.Column="1" Style="{StaticResource CardFlat}"
+                  Margin="9,14,18,14">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <Grid Grid.Row="0" Margin="14,0">
+                <TextBlock Text="打包历史" Style="{StaticResource H2}"
+                           VerticalAlignment="Center"/>
+                <Button Content="清空记录" Style="{StaticResource DangerButton}"
+                        HorizontalAlignment="Right" Click="ClearHistory"
+                        Padding="10,4" FontSize="12.5" Margin="0,8"/>
+              </Grid>
+              <Border Grid.Row="1" Style="{StaticResource HairLine}"/>
+              <ListBox x:Name="HistList" Grid.Row="2" Background="Transparent"
+                       BorderThickness="0" Foreground="{StaticResource Label}"
+                       FontFamily="{StaticResource UiFont}" FontSize="12"
+                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                       MouseDoubleClick="HistOpenDouble"
+                       PreviewMouseRightButtonDown="HistRightClick">
+                <ListBox.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="打开产物位置" Click="HistOpen"/>
+                    <MenuItem Header="重新载入脚本" Click="HistReload"/>
+                    <MenuItem Header="复制诊断信息" Click="HistCopyDiag"/>
+                    <Separator/>
+                    <MenuItem Header="删除这条记录" Click="HistDelete"/>
+                  </ContextMenu>
+                </ListBox.ContextMenu>
+                <ListBox.ItemContainerStyle>
+                  <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="10,8"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Template">
+                      <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                          <Border x:Name="hb" Background="Transparent"
+                                  CornerRadius="6" Margin="6,1"
+                                  Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Stretch"/>
+                          </Border>
+                          <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                              <Setter TargetName="hb" Property="Background"
+                                      Value="{StaticResource Surface2}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                              <Setter TargetName="hb" Property="Background"
+                                      Value="#300A84FF"/>
+                            </Trigger>
+                          </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                      </Setter.Value>
+                    </Setter>
+                  </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel>
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}"
+                                   Foreground="{StaticResource Label}"
+                                   FontFamily="{StaticResource MonoFont}"
+                                   FontSize="12"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding Tip}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Result}"
+                                   Margin="8,0,0,0" FontSize="11.5">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                              <Setter Property="Foreground"
+                                      Value="{StaticResource Label2}"/>
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding Result}"
+                                             Value="成功">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Green}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Result}"
+                                             Value="失败">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Pink}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Result}"
+                                             Value="已终止">
+                                  <Setter Property="Foreground"
+                                          Value="{StaticResource Orange}"/>
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                      </Grid>
+                      <TextBlock Style="{StaticResource Caption}" Margin="0,3,0,0"
+                                 Text="{Binding Sub}"
+                                 TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Grid>
+          </Border>
+        </Grid>
+
+        <!-- ══════════ 运行时 / 兼容模式 ══════════ -->
+        <Grid x:Name="ViewRuntime" Grid.Column="0" Grid.ColumnSpan="3"
+              Visibility="Collapsed">
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18,14,18,14">
+            <StackPanel>
+
+              <Border Style="{StaticResource Card}">
+                <StackPanel>
+                  <TextBlock Text="打包运行时" Style="{StaticResource H2}"/>
+                  <TextBlock Text="两个运行时都已随包提供，放在任意位置都能被找到，按需切换即可。库装不上时，切到 3.12 通常就能解决。"
+                             Style="{StaticResource Caption}" Margin="0,6,0,0"
+                             TextWrapping="Wrap"/>
+
+                  <Border x:Name="Slot312" Background="{StaticResource Surface2}"
+                          CornerRadius="12" Padding="14,12" Margin="0,14,0,0">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock x:Name="Slot312Title" Text="Python 3.12 · 兼容模式"
+                                     Style="{StaticResource H2}"/>
+                          <Border x:Name="Slot312Badge"
+                                  Background="{StaticResource Surface3}"
+                                  CornerRadius="9" Padding="8,2" Margin="8,0,0,0">
+                            <TextBlock x:Name="Slot312BadgeText" Text="未安装"
+                                       Style="{StaticResource Caption}"/>
+                          </Border>
+                        </StackPanel>
+                        <TextBlock x:Name="Slot312Note"
+                                   Text="三方库生态覆盖最广，老库与科学计算包优先选它"
+                                   Style="{StaticResource Caption}" Margin="0,5,0,0"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock x:Name="Slot312Detail" Text=""
+                                   Style="{StaticResource Caption}" Margin="0,4,0,0"
+                                   FontFamily="{StaticResource MonoFont}"
+                                   TextWrapping="Wrap"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button x:Name="BtnUse312" Content="切换到此"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="UseRuntime312" MinWidth="104"/>
+                        <Button Content="指定位置…"
+                                Style="{StaticResource GhostButton}"
+                                Click="LocateRuntime312" Margin="0,6,0,0"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+
+                  <Border x:Name="SlotDefault" Background="{StaticResource Surface2}"
+                          CornerRadius="12" Padding="14,12" Margin="0,10,0,0">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock x:Name="SlotDefTitle" Text="Python 3.14 · 默认"
+                                     Style="{StaticResource H2}"/>
+                          <Border x:Name="SlotDefBadge"
+                                  Background="{StaticResource Surface3}"
+                                  CornerRadius="9" Padding="8,2" Margin="8,0,0,0">
+                            <TextBlock x:Name="SlotDefBadgeText" Text="未安装"
+                                       Style="{StaticResource Caption}"/>
+                          </Border>
+                        </StackPanel>
+                        <TextBlock x:Name="SlotDefNote"
+                                   Text="版本较新，部分依赖尚未适配的库会装不上"
+                                   Style="{StaticResource Caption}" Margin="0,5,0,0"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock x:Name="SlotDefDetail" Text=""
+                                   Style="{StaticResource Caption}" Margin="0,4,0,0"
+                                   FontFamily="{StaticResource MonoFont}"
+                                   TextWrapping="Wrap"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button x:Name="BtnUseDef" Content="切换到此"
+                                Style="{StaticResource SecondaryButton}"
+                                Click="UseRuntimeDefault" MinWidth="104"/>
+                        <Button Content="指定位置…"
+                                Style="{StaticResource GhostButton}"
+                                Click="LocateRuntimeDefault" Margin="0,6,0,0"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+
+                  <TextBlock x:Name="RuntimeActive"
+                             Text="" Style="{StaticResource Caption}"
+                             Margin="0,14,0,0" TextWrapping="Wrap"/>
+                  <TextBlock Text="切换后立即生效：语法检查、依赖分析与打包都会用新选的运行时。"
+                             Style="{StaticResource Caption}" Margin="0,4,0,0"
+                             TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+
+              <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                  <TextBlock Text="运行时说明" Style="{StaticResource H2}"/>
+                  <TextBlock Margin="0,10,0,0" FontFamily="{StaticResource UiFont}"
+                             FontSize="12" Foreground="{StaticResource Label2}"
+                             TextWrapping="Wrap"
+                             Text="两个运行时都随包提供，不需要联网安装。&#x0a;&#x0a;运行时目录不必和主程序放在一起：&#x0a;程序会在程序目录、上一级目录、%LOCALAPPDATA%\Dainric、桌面、文档等位置自动查找，&#x0a;找到后会记住位置，下次启动直接使用。也可以用「指定位置…」手动指明。&#x0a;&#x0a;Python 3.12 · 兼容模式&#x0a;  三方库生态覆盖最广，老库与科学计算包优先选它。程序默认走这个。&#x0a;&#x0a;Python 3.14 · 默认&#x0a;  版本较新，语法特性更全；产物略大，部分未适配的库会装不上。&#x0a;&#x0a;切换后立即生效，语法检查、依赖分析与打包都会用新选的运行时。&#x0a;选择会记在配置里，下次启动保持。"/>
+                </StackPanel>
+              </Border>
+
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </Grid>
+    </Grid>
+
+    <Border Grid.Row="3" Style="{StaticResource HairLine}"/>
+
+    <!-- ══════════ 底栏 ══════════ -->
+    <Border Grid.Row="4" Background="{StaticResource Surface}" Height="60">
+      <Grid Margin="16,0">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Ellipse x:Name="StatusDot" Width="8" Height="8"
+                   Fill="{StaticResource Green}" Margin="0,0,9,0"/>
+          <TextBlock x:Name="StatusText" Text="就绪"
+                     Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                    VerticalAlignment="Center">
+          <Button x:Name="BtnOpenDir" Content="打开目录"
+                  Style="{StaticResource SecondaryButton}"
+                  Click="OpenOutDir" Margin="0,0,8,0"/>
+          <Button x:Name="BtnStart" Content="开始打包"
+                  Style="{StaticResource PrimaryButton}"
+                  Click="StartBuild" MinWidth="120"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

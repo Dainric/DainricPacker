@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build C# project
+        run: dotnet build "打包器-C#源码/DainricPacker.csproj" -c Release --nologo
+
+      - name: Build tests (no run)
+        run: dotnet build "打包器-单元测试/DainricPacker.Tests/DainricPacker.Tests.csproj" -c Release --nologo

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Dainric 打包器 v3.2 · 新版界面设计预览</title>
+<style>
+:root{
+  --bg:#000; --s1:#1C1C1E; --s2:#2C2C2E; --s3:#3A3A3C;
+  --hair:#2A2A2C; --label:#F2F2F7; --l2:#A5A5AC; --l3:#7C8798;
+  --blue:#0A84FF; --green:#30D158; --orange:#FF9F0A; --pink:#FF375F;
+  --purple:#BF5AF2; --teal:#40C8E0;
+  --ease:cubic-bezier(.32,.72,0,1);
+  --ui:-apple-system,"SF Pro Text","Segoe UI Variable","Segoe UI",
+       "Microsoft YaHei UI",system-ui,sans-serif;
+  --mono:"Cascadia Mono","SF Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#0a0a0b;font-family:var(--ui);color:var(--label);
+  padding:28px 20px 60px;display:flex;flex-direction:column;align-items:center;
+  -webkit-font-smoothing:antialiased;
+}
+.pagehead{width:100%;max-width:1260px;margin-bottom:20px}
+.pagehead h1{font-size:19px;font-weight:600;letter-spacing:.2px}
+.pagehead p{font-size:13px;color:var(--l2);margin-top:6px;line-height:1.7}
+.tabs{display:flex;gap:8px;margin:18px 0 22px;flex-wrap:wrap}
+.tab{
+  padding:7px 15px;border-radius:9px;background:var(--s1);color:var(--l2);
+  font-size:12.5px;cursor:pointer;border:none;font-family:var(--ui);
+  transition:all .28s var(--ease);
+}
+.tab:hover{background:var(--s2);color:var(--label)}
+.tab.on{background:var(--blue);color:#fff;font-weight:600}
+.stage{
+  display:none;width:100%;max-width:1260px;justify-content:center;
+  animation:fade .42s var(--ease);
+}
+.stage.on{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.cap{font-size:12px;color:var(--l3);margin-top:16px;text-align:center;line-height:1.8}
+
+/* ── 窗口外壳 ── */
+.win{
+  width:1200px;height:760px;background:var(--bg);border-radius:12px;
+  overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 30px 90px rgba(0,0,0,.75),0 0 0 1px #232325;
+  position:relative;
+}
+.tbar{
+  height:44px;display:flex;align-items:center;padding:0 16px;gap:10px;
+  border-bottom:1px solid var(--hair);flex:0 0 44px;
+}
+.tbar .dot{width:11px;height:11px;border-radius:50%;background:var(--s3)}
+.tbar .til{font-size:12.5px;color:var(--l2);margin-left:6px}
+.body{flex:1;display:flex;min-height:0}
+
+/* ── 侧栏 ── */
+.side{
+  width:196px;flex:0 0 196px;border-right:1px solid var(--hair);
+  padding:16px 12px;display:flex;flex-direction:column;gap:3px;
+}
+.brand{display:flex;align-items:center;gap:9px;padding:4px 8px 16px}
+.brand .mk{
+  width:26px;height:26px;border-radius:7px;
+  background:linear-gradient(150deg,#0A84FF,#BF5AF2);
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.brand b{font-size:13.5px;font-weight:600}
+.brand span{font-size:10.5px;color:var(--l3);display:block;margin-top:1px}
+.nav{
+  display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;
+  font-size:13px;color:var(--l2);cursor:pointer;border:none;background:none;
+  font-family:var(--ui);text-align:left;width:100%;
+  transition:all .24s var(--ease);
+}
+.nav:hover{background:var(--s1);color:var(--label)}
+.nav.on{background:var(--blue);color:#fff;font-weight:600}
+.nav .ic{width:16px;text-align:center;font-size:13px;opacity:.9}
+.sidefoot{margin-top:auto;padding:10px 8px 2px;border-top:1px solid var(--hair)}
+.sidefoot .row{display:flex;justify-content:space-between;font-size:11px;
+  color:var(--l3);padding:3px 0}
+.sidefoot .row b{color:var(--green);font-weight:600}
+
+/* ── 主区 ── */
+.main{flex:1;display:flex;min-width:0}
+.col{padding:20px 22px;overflow:auto}
+.col.form{flex:1;min-width:0}
+.col.log{
+  width:330px;flex:0 0 330px;border-left:1px solid var(--hair);
+  background:#0d0d0e;padding:18px 16px;
+}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:5px;
+  border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ── 卡片 ── */
+.card{
+  background:var(--s1);border-radius:14px;border:1px solid #232325;
+  overflow:hidden;margin-bottom:12px;
+}
+.chead{
+  display:flex;align-items:center;gap:9px;padding:13px 16px 11px;
+  cursor:pointer;user-select:none;
+}
+.chead .t{font-size:13.5px;font-weight:600}
+.chead .sub{font-size:11.5px;color:var(--l3);margin-left:auto;
+  display:flex;align-items:center;gap:7px}
+.chead .caret{
+  font-size:10px;color:var(--l3);transition:transform .32s var(--ease);
+  display:inline-block;
+}
+.card.fold .chead .caret{transform:rotate(-90deg)}
+.card .cbody{padding:0 16px 14px;display:block}
+.card.fold .cbody{display:none}
+
+/* 行 */
+.row{
+  display:flex;align-items:center;min-height:42px;gap:12px;
+  border-bottom:1px solid var(--hair);
+}
+.row:last-child{border-bottom:none}
+.row .k{font-size:13px;color:var(--label);flex:0 0 auto}
+.row .v{margin-left:auto;display:flex;align-items:center;gap:9px}
+.hint{font-size:11.5px;color:var(--l3);line-height:1.6;
+  padding:9px 0 2px}
+
+/* 输入 */
+.inp{
+  background:var(--s2);border:1px solid transparent;border-radius:9px;
+  padding:7px 11px;font-size:12.5px;color:var(--label);font-family:var(--ui);
+  width:290px;outline:none;transition:all .24s var(--ease);
+}
+.inp.sm{width:96px;text-align:center}
+.inp:focus{border-color:var(--blue);background:#242426}
+.inp::placeholder{color:var(--l3)}
+.mono{font-family:var(--mono);font-size:11.5px}
+
+/* 按钮 */
+.btn{
+  border:none;border-radius:9px;padding:8px 16px;font-size:13px;
+  font-family:var(--ui);cursor:pointer;font-weight:500;
+  transition:all .24s var(--ease);
+}
+.btn.pri{background:var(--blue);color:#fff;font-weight:600}
+.btn.sec{background:var(--s2);color:var(--label)}
+.btn.gho{background:transparent;color:var(--blue);font-size:12.5px;
+  padding:6px 10px}
+.btn.dgr{background:#26FF375F;color:var(--pink)}
+.btn:hover{opacity:.86}
+.btn:active{opacity:.66;transform:scale(.985)}
+
+/* iOS 开关 */
+.sw{width:47px;height:28px;border-radius:14px;background:var(--s3);
+  position:relative;cursor:pointer;flex:0 0 47px;
+  transition:background .28s var(--ease);border:none}
+.sw::after{
+  content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;
+  border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.35);
+  transition:transform .28s var(--ease);
+}
+.sw.on{background:var(--green)}
+.sw.on::after{transform:translateX(19px)}
+
+/* 分段控件 */
+.seg{
+  display:inline-flex;background:var(--s2);border-radius:9px;padding:2px;
+  position:relative;gap:2px;
+}
+.seg button{
+  border:none;background:none;color:var(--l2);font-size:12.5px;
+  font-family:var(--ui);padding:6px 14px;border-radius:7px;cursor:pointer;
+  transition:all .26s var(--ease);position:relative;z-index:1;
+}
+.seg button.on{background:var(--s3);color:var(--label);font-weight:600}
+
+/* 徽章 */
+.badge{
+  font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;
+  white-space:nowrap;
+}
+.badge.ok{background:var(--green);color:#fff}
+.badge.no{background:var(--s3);color:var(--l2)}
+.badge.wa{background:var(--orange);color:#000}
+
+/* 拖放区 */
+.drop{
+  border:1.5px dashed #3a3a3d;border-radius:12px;padding:22px;
+  text-align:center;cursor:pointer;transition:all .28s var(--ease);
+  background:#161618;
+}
+.drop:hover{border-color:var(--blue);background:#17181c}
+.drop.filled{border-style:solid;border-color:#2f3a4a;background:#14161a;
+  text-align:left;padding:15px 16px}
+.drop .big{font-size:13.5px;color:var(--label);font-weight:500}
+.drop .small{font-size:11.5px;color:var(--l3);margin-top:6px;line-height:1.7}
+.drop .file{display:flex;align-items:center;gap:11px}
+.drop .fico{
+  width:34px;height:34px;border-radius:9px;background:#0A84FF26;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+}
+.drop .fname{font-size:13px;font-weight:600}
+.drop .fpath{font-size:11px;color:var(--l3);margin-top:3px;
+  font-family:var(--mono)}
+
+/* 步骤条 */
+.steps{display:flex;gap:0;padding:4px 0 14px;align-items:center}
+.step{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--l3)}
+.step .n{
+  width:19px;height:19px;border-radius:50%;background:var(--s3);
+  display:flex;align-items:center;justify-content:center;font-size:10px;
+  font-weight:600;transition:all .3s var(--ease);
+}
+.step.done .n{background:var(--green);color:#000}
+.step.act .n{background:var(--blue);color:#fff}
+.step.act{color:var(--label)}
+.step .ln{width:26px;height:1px;background:var(--s3);margin:0 6px}
+.step.done .ln{background:var(--green)}
+
+/* 底部动作条 */
+.actbar{
+  flex:0 0 62px;border-top:1px solid var(--hair);display:flex;
+  align-items:center;padding:0 20px;gap:14px;background:#0d0d0e;
+}
+.stat{font-size:12.5px;color:var(--l2)}
+.stat b{color:var(--label);font-weight:600}
+.pbar{
+  flex:1;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;
+  max-width:240px;
+}
+.pbar i{
+  display:block;height:100%;width:62%;border-radius:2px;
+  background:linear-gradient(90deg,var(--blue),var(--teal));
+  transition:width .5s var(--ease);
+}
+.actbar .right{margin-left:auto;display:flex;gap:10px}
+
+/* 日志 */
+.logh{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.logh .t{font-size:12.5px;font-weight:600}
+.logh .pill{
+  font-size:10.5px;padding:2px 8px;border-radius:20px;background:var(--s2);
+  color:var(--l2);margin-left:auto;
+}
+.logbody{font-family:var(--mono);font-size:11.5px;line-height:1.85}
+.ll{display:flex;gap:8px;padding:1px 0}
+.ll .tm{color:#4a4a4e;flex:0 0 46px}
+.ll.dim{color:var(--l3)}
+.ll.ok{color:var(--green)}
+.ll.warn{color:var(--orange)}
+.ll.err{color:var(--pink)}
+.ll.acc{color:var(--blue)}
+
+/* 结果条 */
+.resbar{
+  display:flex;align-items:center;gap:10px;background:#30D1581A;
+  border:1px solid #30D15840;border-radius:11px;padding:11px 14px;
+  margin-bottom:12px;
+}
+.resbar.bad{background:#FF375F1A;border-color:#FF375F40}
+.resbar .rt{font-size:12.5px;font-weight:600}
+.resbar .rd{font-size:11.5px;color:var(--l2);margin-top:2px}
+
+/* 依赖表 */
+.dep{width:100%;border-collapse:collapse;font-size:12.5px}
+.dep td{padding:8px 0;border-bottom:1px solid var(--hair)}
+.dep tr:last-child td{border-bottom:none}
+.dep .m{font-family:var(--mono);font-size:12px}
+.dep .r{text-align:right}
+
+/* 队列 */
+.q{display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid var(--hair);font-size:12.5px}
+.q:last-child{border-bottom:none}
+.q .n{flex:1}
+.q .s{font-size:11.5px;color:var(--l2)}
+.q .s.ok{color:var(--green)}
+.q .s.er{color:var(--pink)}
+.q .s.run{color:var(--blue)}
+</style>
+</head>
+<body>
+
+<div class="pagehead">
+  <h1>Dainric 打包器 v3.2 · 新版界面设计预览</h1>
+  <p>三套方案 + 关键组件规范。全部为纯 CSS 还原，可直接看到最终观感；点标题栏左侧的卡片标题可折叠，开关可点。</p>
+</div>
+
+<div class="tabs">
+  <button class="tab on" data-s="a">方案 A · 分区折叠</button>
+  <button class="tab" data-s="b">方案 B · 分步向导</button>
+  <button class="tab" data-s="c">方案 C · 双栏密集</button>
+  <button class="tab" data-s="d">组件规范</button>
+</div>
+
+<!-- ══════════ 方案 A ══════════ -->
+<div class="stage on" id="s-a">
+<div class="win">
+  <div class="tbar">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span class="til">Dainric 打包器 · 3.2.0</span>
+  </div>
+  <div class="body">
+    <div class="side">
+      <div class="brand">
+        <div class="mk">◈</div>
+        <div><b>Dainric</b><span>打包器 3.2.0</span></div>
+      </div>
+      <button class="nav on"><span class="ic">◆</span>单文件打包</button>
+      <button class="nav"><span class="ic">◇</span>依赖检查</button>
+      <button class="nav"><span class="ic">▤</span>批量打包</button>
+      <button class="nav"><span class="ic">◷</span>历史记录</button>
+      <button class="nav"><span class="ic">⬡</span>运行时</button>
+      <div class="sidefoot">
+        <div class="row"><span>引擎</span><b>就绪</b></div>
+        <div class="row"><span>运行时</span><span>3.12 · 3.14</span></div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="col form">
+
+        <!-- 脚本 -->
+        <div class="card">
+          <div class="chead" onclick="fold(this)">
+            <span class="caret">▼</span>
+            <span class="t">脚本</span>
+            <span class="sub">app.py · 8.2 KB</span>
+          </div>
+          <div class="cbody">
+            <div class="drop filled">
+              <div class="file">
+                <div class="fico">🐍</div>
+                <div>
+                  <div class="fname">app.py</div>
+                  <div class="fpath">C:\work\demo\app.py</div>
+                </div>
+                <button class="btn gho" style="margin-left:auto">更换</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 输出 -->
+        <div class="card">
+          <div class="chead" onclick="fold(this)">
+            <span class="caret">▼</span>
+            <span class="t">输出</span>
+            <span class="sub">未设置版本</span>
+          </div>
+          <div class="cbody">
+            <div class="row"><span class="k">产物名称</span>
+              <span class="v"><input class="inp" value="app"></span></div>
+            <div class="row"><span class="k">版本</span>
+              <span class="v"><span style="font-size:12.5px;color:var(--l3)">未设置</span>
+              <button class="btn gho">设置</button></span></div>
+            <div class="row"><span class="k">输出目录</span>
+              <span class="v"><input class="inp mono" value="<user>\Desktop\Dainric产物"></span></div>
+            <div class="row"><span class="k">图标</span>
+              <span class="v"><span style="font-size:12.5px;color:var(--l3)">使用内置图标</span>
+              <button class="btn gho">选择</button></span></div>
+          </div>
+        </div>
+
+        <!-- 构建选项：只留常用的 -->
+        <div class="card">
+          <div class="chead" onclick="fold(this)">
+            <span class="caret">▼</span>
+            <span class="t">构建选项</span>
+            <span class="sub">单文件 · 自动</span>
+          </div>
+          <div class="cbody">
+            <div class="row"><span class="k">打包形态</span>
+              <span class="v"><span class="seg">
+                <button class="on">单文件</button><button>目录</button>
+              </span></span></div>
+            <div class="row"><span class="k">窗口模式</span>
+              <span class="v"><span class="seg">
+                <button class="on">自动</button><button>控制台</button><button>无控制台</button>
+              </span></span></div>
+            <div class="row"><span class="k">打包后自检产物</span>
+              <span class="v"><button class="sw on" onclick="this.classList.toggle('on')"></button></span></div>
+            <div class="row"><span class="k">打包前检查依赖</span>
+              <span class="v"><button class="sw on" onclick="this.classList.toggle('on')"></button></span></div>
+          </div>
+        </div>
+
+        <!-- 高级选项：默认折叠 -->
+        <div class="card fold">
+          <div class="chead" onclick="fold(this)">
+            <span class="caret">▼</span>
+            <span class="t">高级选项</span>
+            <span class="sub">默认折叠 · 5 项</span>
+          </div>
+          <div class="cbody">
+            <div class="row"><span class="k">管理员提权 (UAC)</span>
+              <span class="v"><button class="sw" onclick="this.classList.toggle('on')"></button></span></div>
+            <div class="row"><span class="k">清理临时文件</span>
+              <span class="v"><button class="sw on" onclick="this.classList.toggle('on')"></button></span></div>
+            <div class="row"><span class="k">自检参数</span>
+              <span class="v"><input class="inp" placeholder="留空即可，产物需参数时才填"></span></div>
+            <div class="row"><span class="k">打包超时</span>
+              <span class="v"><input class="inp sm" value="1800">
+              <span style="font-size:12px;color:var(--l3)">秒</span></span></div>
+            <div class="hint">含大型库（PyTorch / PyQt）的项目通常需要几分钟到几十分钟，超时可调大。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col log">
+        <div class="logh">
+          <span class="t">输出日志</span>
+          <span class="pill">自动滚动</span>
+        </div>
+        <div class="logbody">
+          <div class="ll acc"><span class="tm">21:40:02</span>开始打包 app</div>
+          <div class="ll dim"><span class="tm">21:40:02</span>语法检查…</div>
+          <div class="ll ok"><span class="tm">21:40:03</span>语法检查通过</div>
+          <div class="ll dim"><span class="tm">21:40:03</span>依赖检查…</div>
+          <div class="ll ok"><span class="tm">21:40:04</span>依赖通过：第三方 2 · 标准库 6</div>
+          <div class="ll dim"><span class="tm">21:40:04</span>PyInstaller 运行中…</div>
+          <div class="ll dim"><span class="tm">21:40:12</span>Analyzing modules…</div>
+          <div class="ll dim"><span class="tm">21:40:26</span>Building PKG completed</div>
+          <div class="ll ok"><span class="tm">21:40:31</span>输出: app.exe · 7.90 MB</div>
+          <div class="ll dim"><span class="tm">21:40:31</span>产物自检：启动 app.exe…</div>
+          <div class="ll ok"><span class="tm">21:40:37</span>产物自检通过</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="actbar">
+    <span class="stat">当前生效 <b>Python 3.12 · 兼容模式</b></span>
+    <div class="pbar"><i></i></div>
+    <div class="right">
+      <button class="btn sec">停止</button>
+      <button class="btn pri">开始打包</button>
+    </div>
+  </div>
+</div>
+<div class="cap">方案 A —— 分区折叠。把「打包形态 / 窗口模式 / 自检 / 依赖检查」留在主视野，<br>UAC、超时、自检参数收进默认折叠的「高级选项」，页面不再需要滚动。</div>
+</div>
+
+<!-- ══════════ 方案 B ══════════ -->
+<div class="stage" id="s-b">
+<div class="win">
+  <div class="tbar">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span class="til">Dainric 打包器 · 3.2.0</span>
+  </div>
+  <div class="body">
+    <div class="side">
+      <div class="brand">
+        <div class="mk">◈</div>
+        <div><b>Dainric</b><span>打包器 3.2.0</span></div>
+      </div>
+      <button class="nav on"><span class="ic">①</span>选择脚本</button>
+      <button class="nav"><span class="ic">②</span>打包设置</button>
+      <button class="nav"><span class="ic">③</span>检查与打包</button>
+      <button class="nav"><span class="ic">▤</span>批量打包</button>
+      <button class="nav"><span class="ic">◷</span>历史记录</button>
+      <button class="nav"><span class="ic">⬡</span>运行时</button>
+      <div class="sidefoot">
+        <div class="row"><span>引擎</span><b>就绪</b></div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="col form">
+        <div class="steps" style="margin-bottom:16px">
+          <span class="step done"><span class="n">✓</span>选择脚本</span>
+          <span class="ln"></span>
+          <span class="step act"><span class="n">2</span>打包设置</span>
+          <span class="ln"></span>
+          <span class="step"><span class="n">3</span>检查与打包</span>
+        </div>
+
+        <div class="card">
+          <div class="chead"><span class="t">第二步 · 打包设置</span>
+            <span class="sub">按需修改，其余保持默认就行</span></div>
+          <div class="cbody">
+            <div class="row"><span class="k">产物名称</span>
+              <span class="v"><input class="inp" value="app"></span></div>
+            <div class="row"><span class="k">打包形态</span>
+              <span class="v"><span class="seg">
+                <button class="on">单文件</button><button>目录</button></span></span></div>
+            <div class="row"><span class="k">窗口模式</span>
+              <span class="v"><span class="seg">
+                <button class="on">自动</button><button>控制台</button><button>无控制台</button></span></span></div>
+            <div class="row"><span class="k">输出目录</span>
+              <span class="v"><input class="inp mono" value="<user>\Desktop\Dainric产物"></span></div>
+            <div class="row"><span class="k">图标与版本</span>
+              <span class="v"><button class="btn sec">去设置</button></span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="chead"><span class="t">自动检查</span>
+            <span class="sub">打包前先排掉会白跑的问题</span></div>
+          <div class="cbody">
+            <div class="row"><span class="k">打包前检查依赖</span>
+              <span class="v"><button class="sw on" onclick="this.classList.toggle('on')"></button></span></div>
+            <div class="row"><span class="k">打包后自检产物</span>
+              <span class="v"><button class="sw on" onclick="this.classList.toggle('on')"></button></span></div>
+            <div class="row"><span class="k">失败时自动修复重试</span>
+              <span class="v"><button class="sw on" onclick="this.classList.toggle('on')"></button></span></div>
+            <div class="hint">允许自动补 hidden-import / collect-data / collect-binaries，最多重试 4 次。</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="chead"><span class="t">合成预览</span></div>
+          <div class="cbody">
+            <div class="hint" style="padding:0 0 8px;font-size:12px;color:var(--l2)">
+              将以如下命令打包：
+            </div>
+            <div class="mono" style="background:#0d0d0e;border-radius:9px;
+                 padding:11px 13px;color:var(--l2);line-height:1.85;
+                 word-break:break-all;font-size:11px">
+              python.exe -m PyInstaller --onefile --console --name app
+              --noconfirm --hidden-import modulefinder --icon &lt;内置&gt;
+              C:\work\demo\app.py
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col log">
+        <div class="logh"><span class="t">输出日志</span>
+          <span class="pill">等待开始</span></div>
+        <div class="logbody">
+          <div class="ll dim"><span class="tm">—</span>尚未开始打包</div>
+          <div class="ll dim"><span class="tm">—</span>选好脚本后点右下角「开始打包」</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="actbar">
+    <span class="stat">第 <b>2</b> / 3 步</span>
+    <div class="right">
+      <button class="btn sec">上一步</button>
+      <button class="btn pri">下一步</button>
+    </div>
+  </div>
+</div>
+<div class="cap">方案 B —— 分步向导。第一次用的人不会漏项，<br>代价是熟手每次要多点两下（可加「跳过向导」开关缓解）。</div>
+</div>
+
+<!-- ══════════ 方案 C ══════════ -->
+<div class="stage" id="s-c">
+<div class="win">
+  <div class="tbar">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span class="til">Dainric 打包器 · 3.2.0</span>
+  </div>
+  <div class="body">
+    <div class="side">
+      <div class="brand">
+        <div class="mk">◈</div>
+        <div><b>Dainric</b><span>打包器 3.2.0</span></div>
+      </div>
+      <button class="nav on"><span class="ic">◆</span>单文件打包</button>
+      <button class="nav"><span class="ic">◇</span>依赖检查</button>
+      <button class="nav"><span class="ic">▤</span>批量打包</button>
+      <button class="nav"><span class="ic">◷</span>历史记录</button>
+      <button class="nav"><span class="ic">⬡</span>运行时</button>
+      <div class="sidefoot">
+        <div class="row"><span>引擎</span><b>就绪</b></div>
+        <div class="row"><span>运行时</span><span>3.12 · 3.14</span></div>
+      </div>
+    </div>
+    <div class="main" style="flex-direction:column">
+      <div class="col form" style="flex:none;padding-bottom:0">
+        <div class="resbar">
+          <span style="font-size:15px">✓</span>
+          <div><div class="rt">依赖检查通过</div>
+            <div class="rd">第三方 2 个 · 标准库 6 个 · 本地 1 个 —— 可以打包</div></div>
+          <button class="btn gho" style="margin-left:auto">看详情</button>
+        </div>
+
+        <div class="card" style="margin-bottom:0">
+          <div class="cbody" style="padding:4px 16px 10px">
+            <div class="row"><span class="k">脚本</span>
+              <span class="v"><span class="mono" style="font-size:12px">C:\work\demo\app.py</span>
+              <button class="btn gho">更换</button></span></div>
+            <div class="row"><span class="k">产物</span>
+              <span class="v"><input class="inp sm" style="width:150px;text-align:left" value="app">
+              <span class="seg" style="margin-left:4px">
+                <button class="on">单文件</button><button>目录</button></span>
+              <span class="seg" style="margin-left:4px">
+                <button class="on">自动</button><button>控制台</button></span></span></div>
+            <div class="row"><span class="k">选项</span>
+              <span class="v">
+                <span style="font-size:12px;color:var(--l2)">自检</span>
+                <button class="sw on" style="width:38px;height:23px"
+                  onclick="this.classList.toggle('on')"></button>
+                <span style="font-size:12px;color:var(--l2);margin-left:6px">清理</span>
+                <button class="sw on" style="width:38px;height:23px"
+                  onclick="this.classList.toggle('on')"></button>
+                <span style="font-size:12px;color:var(--l2);margin-left:6px">UAC</span>
+                <button class="sw" style="width:38px;height:23px"
+                  onclick="this.classList.toggle('on')"></button>
+              </span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col log" style="flex:1;width:auto;border-left:none;
+           border-top:1px solid var(--hair);padding:14px 22px">
+        <div class="logh"><span class="t">输出日志</span>
+          <span class="pill">实时</span></div>
+        <div class="logbody" style="column-count:2;column-gap:26px">
+          <div class="ll acc"><span class="tm">21:40:02</span>开始打包 app</div>
+          <div class="ll ok"><span class="tm">21:40:03</span>语法检查通过</div>
+          <div class="ll ok"><span class="tm">21:40:04</span>依赖检查通过</div>
+          <div class="ll dim"><span class="tm">21:40:04</span>Analyzing modules…</div>
+          <div class="ll dim"><span class="tm">21:40:18</span>Building PYZ…</div>
+          <div class="ll dim"><span class="tm">21:40:26</span>Building PKG…</div>
+          <div class="ll ok"><span class="tm">21:40:31</span>输出 app.exe 7.90 MB</div>
+          <div class="ll ok"><span class="tm">21:40:37</span>产物自检通过</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="actbar">
+    <span class="stat">当前生效 <b>Python 3.12</b> · PyInstaller 6.22.3</span>
+    <div class="pbar" style="max-width:180px"><i style="width:100%"></i></div>
+    <div class="right">
+      <button class="btn sec">打开产物目录</button>
+      <button class="btn pri">开始打包</button>
+    </div>
+  </div>
+</div>
+<div class="cap">方案 C —— 双栏密集。设置压成三行，日志横铺在下方。<br>一屏之内信息量最大，适合已经用熟、只关心「快点打完」的人。</div>
+</div>
+
+<!-- ══════════ 组件规范 ══════════ -->
+<div class="stage" id="s-d">
+<div class="win" style="height:auto;max-height:none">
+  <div class="tbar">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span class="til">组件规范</span>
+  </div>
+  <div class="col" style="padding:24px 28px;display:grid;
+       grid-template-columns:1fr 1fr;gap:26px 34px;overflow:visible">
+
+    <div>
+      <div class="chead" style="padding:0 0 12px"><span class="t">颜色</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px">
+        <div style="width:78px">
+          <div style="height:44px;border-radius:9px;background:#000;
+               border:1px solid #2a2a2c"></div>
+          <div style="font-size:10.5px;color:var(--l3);margin-top:5px">
+            背景 #000</div></div>
+        <div style="width:78px">
+          <div style="height:44px;border-radius:9px;background:#1C1C1E"></div>
+          <div style="font-size:10.5px;color:var(--l3);margin-top:5px">
+            卡片 #1C1C1E</div></div>
+        <div style="width:78px">
+          <div style="height:44px;border-radius:9px;background:#2C2C2E"></div>
+          <div style="font-size:10.5px;color:var(--l3);margin-top:5px">
+            输入 #2C2C2E</div></div>
+        <div style="width:78px">
+          <div style="height:44px;border-radius:9px;background:#0A84FF"></div>
+          <div style="font-size:10.5px;color:var(--l3);margin-top:5px">
+            主色 #0A84FF</div></div>
+        <div style="width:78px">
+          <div style="height:44px;border-radius:9px;background:#30D158"></div>
+          <div style="font-size:10.5px;color:var(--l3);margin-top:5px">
+            成功 #30D158</div></div>
+        <div style="width:78px">
+          <div style="height:44px;border-radius:9px;background:#FF9F0A"></div>
+          <div style="font-size:10.5px;color:var(--l3);margin-top:5px">
+            警告 #FF9F0A</div></div>
+        <div style="width:78px">
+          <div style="height:44px;border-radius:9px;background:#FF375F"></div>
+          <div style="font-size:10.5px;color:var(--l3);margin-top:5px">
+            错误 #FF375F</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="chead" style="padding:0 0 12px"><span class="t">按钮</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button class="btn pri">主操作</button>
+        <button class="btn sec">次要</button>
+        <button class="btn gho">文字按钮</button>
+        <button class="btn dgr">停止</button>
+      </div>
+      <div class="hint">圆角 9px · 内边距 8/16 · 按下透明度降到 .66（不做缩放动画，
+        避免 Windows 上命名 Transform 的 XAML 编译问题）。</div>
+    </div>
+
+    <div>
+      <div class="chead" style="padding:0 0 12px"><span class="t">开关 / 分段</span></div>
+      <div style="display:flex;gap:18px;align-items:center">
+        <button class="sw on" onclick="this.classList.toggle('on')"></button>
+        <button class="sw" onclick="this.classList.toggle('on')"></button>
+        <span class="seg"><button class="on">单文件</button><button>目录</button></span>
+      </div>
+      <div class="hint">开关 47×28，滑块 24，位移 19，位移曲线
+        cubic-bezier(.32,.72,0,1) —— 与 iOS 系统开关一致。</div>
+    </div>
+
+    <div>
+      <div class="chead" style="padding:0 0 12px"><span class="t">状态徽章</span></div>
+      <div style="display:flex;gap:9px;align-items:center">
+        <span class="badge ok">可用</span>
+        <span class="badge no">未找到</span>
+        <span class="badge wa">需参数</span>
+      </div>
+      <div class="hint">「需参数」是 v3.2 新增状态：产物要求命令行参数才继续运行，
+        不再误报为启动失败。</div>
+    </div>
+
+    <div>
+      <div class="chead" style="padding:0 0 12px"><span class="t">结果条</span></div>
+      <div class="resbar" style="margin-bottom:9px">
+        <span style="font-size:15px">✓</span>
+        <div><div class="rt">依赖检查通过</div>
+          <div class="rd">第三方 2 · 标准库 6 · 本地 1</div></div>
+      </div>
+      <div class="resbar bad">
+        <span style="font-size:15px">!</span>
+        <div><div class="rt">发现 1 个模块未安装</div>
+          <div class="rd">requests —— 安装命令已复制到剪贴板</div></div>
+        <button class="btn gho" style="margin-left:auto">安装</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="chead" style="padding:0 0 12px"><span class="t">依赖表</span></div>
+      <table class="dep">
+        <tr><td class="m">requests</td>
+          <td class="r"><span class="badge ok">已安装</span></td></tr>
+        <tr><td class="m">numpy</td>
+          <td class="r"><span class="badge ok">已安装</span></td></tr>
+        <tr><td class="m">dainric_absent</td>
+          <td class="r"><span class="badge no">缺失</span></td></tr>
+        <tr><td class="m">json</td>
+          <td class="r" style="color:var(--l3);font-size:11.5px">标准库</td></tr>
+      </table>
+    </div>
+
+    <div style="grid-column:1/-1">
+      <div class="chead" style="padding:0 0 12px"><span class="t">状态 → 颜色映射</span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:11px">
+        <div class="resbar" style="margin:0">
+          <span style="font-size:14px">·</span>
+          <div><div class="rt" style="font-size:12px">进行中</div>
+            <div class="rd">蓝色 · 进度条同步</div></div></div>
+        <div class="resbar" style="margin:0">
+          <span style="font-size:14px">✓</span>
+          <div><div class="rt" style="font-size:12px">通过</div>
+            <div class="rd">绿色 · 可继续</div></div></div>
+        <div class="resbar" style="margin:0;background:#FF9F0A1A;border-color:#FF9F0A40">
+          <span style="font-size:14px">!</span>
+          <div><div class="rt" style="font-size:12px">需要处理</div>
+            <div class="rd">橙色 · 不致命</div></div></div>
+        <div class="resbar bad" style="margin:0">
+          <span style="font-size:14px">✕</span>
+          <div><div class="rt" style="font-size:12px">失败</div>
+            <div class="rd">红色 · 附诊断</div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="cap">组件规范 —— 这套 token 已在 v3.1/3.2 实装于 <span class="mono">Theme.xaml</span>，<br>
+上面是它的完整清单与用法，改版时按这里对齐即可。</div>
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(function (t) {
+  t.onclick = function () {
+    document.querySelectorAll('.tab').forEach(function (x) {
+      x.classList.remove('on');
+    });
+    document.querySelectorAll('.stage').forEach(function (x) {
+      x.classList.remove('on');
+    });
+    t.classList.add('on');
+    document.getElementById('s-' + t.dataset.s).classList.add('on');
+  };
+});
+function fold(head) { head.parentElement.classList.toggle('fold'); }
+</script>
+</body>
+</html>

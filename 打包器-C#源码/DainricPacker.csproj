@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Dainric 打包器 · 原生 Windows 版 -->
+  <!-- 作者: Dainric -->
+  <!-- 纯 .NET/WPF 实现，不依赖 Python，不需要任何运行时安装 -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>DainricPacker</AssemblyName>
+    <RootNamespace>Dainric.Packer</RootNamespace>
+    <Version>4.0.0</Version>
+    <Product>Dainric 打包器</Product>
+    <Company>Dainric</Company>
+    <Authors>Dainric</Authors>
+    <Copyright>Dainric</Copyright>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+
+    <!-- 自包含单文件：目标机无需安装 .NET -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <!-- 体积优化 -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>none</DebugType>
+    <!-- 注意：不能开 InvariantGlobalization。WPF 的字体缓存需要真实 culture
+         （FontCache.MajorLanguages 会构造 "en"），开启后启动即崩。 -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- 默认图标作为嵌入资源：运行时读出来给打包命令当图标用，
+         不必再在源码里塞 base64 -->
+    <EmbeddedResource Include="Assets\app.ico" LogicalName="Dainric.Packer.app.ico" />
+  </ItemGroup>
+
+</Project>
