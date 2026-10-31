@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dainric 打包器</title>
+  <style>
+    body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+           max-width: 760px; margin: 48px auto; padding: 0 20px; color: #1b1f24;
+           background: #f6f7f9; line-height: 1.7; }
+    h1 { margin-bottom: 4px; }
+    .sub { color: #57606a; margin-top: 0; }
+    .card { background: #fff; border: 1px solid #d8dee4; border-radius: 10px;
+            padding: 20px 24px; margin: 20px 0; }
+    a.button { display: inline-block; background: #1f6feb; color: #fff;
+               padding: 10px 18px; border-radius: 6px; text-decoration: none;
+               margin: 6px 8px 0 0; }
+    code { background: #eef1f4; padding: 2px 5px; border-radius: 4px; }
+    .muted { color: #57606a; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Dainric 打包器</h1>
+  <p class="sub">把 Python 脚本打包成独立 Windows EXE</p>
+
+  <div class="card">
+    <h2>下载 v4.0.0</h2>
+    <p>Windows 10 / 11 x64，自包含 .NET 运行时，目标机无需安装 Python 或 .NET。</p>
+    <a class="button" href="https://github.com/Dainric/DainricPacker/releases/download/v4.0.0/Dainric%E6%89%93%E5%8C%85%E5%99%A8-%E5%AE%89%E8%A3%85%E7%A8%8B%E5%BA%8F-v4.0.0.exe">下载安装包（约 93 MB）</a>
+    <a class="button" href="https://github.com/Dainric/DainricPacker/releases/download/v4.0.0/Dainric%E6%89%93%E5%8C%85%E5%99%A8-%E7%BB%BF%E8%89%B2%E7%89%88-v4.0.0.zip">下载绿色版（约 115 MB）</a>
+  </div>
+
+  <div class="card">
+    <h2>更新信息</h2>
+    <p>程序会从 <code>update/latest.json</code> 读取最新版本、下载地址和 SHA256。</p>
+    <p class="muted">仓库：<a href="https://github.com/Dainric/DainricPacker">github.com/Dainric/DainricPacker</a></p>
+  </div>
+
+  <div class="card">
+    <h2>更新日志</h2>
+    <p>v4.0.0：CLI 命令行模式；单实例 + 右键菜单；代码签名；UI 回归与打包冒烟测试。</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "version": "4.0.0",
+  "channel": "stable",
+  "published_at": "2026-10-25",
+  "notes": "CLI 命令行模式；单实例 + 右键菜单；代码签名支持；UI 回归与打包冒烟测试。",
+  "installer": {
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.0.0/Dainric%E6%89%93%E5%8C%85%E5%99%A8-%E5%AE%89%E8%A3%85%E7%A8%8B%E5%BA%8F-v4.0.0.exe",
+    "size": 97272433,
+    "sha256": "AD56B3A4B7F5AB0D3B79671C9250FF7168E00F94BA3D83CB0284DE3E992657FD"
+  },
+  "portable": {
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.0.0/Dainric%E6%89%93%E5%8C%85%E5%99%A8-%E7%BB%BF%E8%89%B2%E7%89%88-v4.0.0.zip",
+    "size": 120484638,
+    "sha256": "252041004248DB0B47D2158F02E07E0A10C534D8DF8D7E1D8CFC874028EF5BC4"
+  }
+}
