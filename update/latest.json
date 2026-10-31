@@ -1,0 +1,16 @@
+{
+  "version": "4.1.1",
+  "channel": "stable",
+  "published_at": "2026-10-31",
+  "notes": "新增关于页一键卸载；安装版调用自带卸载器并清理程序、运行时、配置、历史、日志；绿色版提示手动删除。",
+  "installer": {
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.1/DainricPacker-Setup-v4.1.1.exe",
+    "size": 97274782,
+    "sha256": "BEAB99ECEAD6451BD3996E12F53B45586F1336D81CDD4DA85CEEBC4621736E9E"
+  },
+  "portable": {
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.1/DainricPacker-Portable-v4.1.1.zip",
+    "size": 120540331,
+    "sha256": "58C3A4888B07C17AA4A0DC713C7717F2530848FC605AA2C122AADDFD52E4149D"
+  }
+}
