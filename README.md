@@ -7,7 +7,7 @@
 
 [![build](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml/badge.svg)](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml)
 
-> 当前版本：**v4.0.0** · [下载安装包/绿色版](https://github.com/Dainric/DainricPacker/releases/tag/v4.0.0)
+> 当前版本：**v4.0.0** · [下载安装包/绿色版](https://github.com/Dainric/DainricPacker/releases/tag/v4.0.0) · [下载页](https://dainric.github.io/DainricPacker/)
 
 ![主界面](docs/images/main.png)
 
