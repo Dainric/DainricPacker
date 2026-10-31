@@ -1,0 +1,34 @@
+name: publish-docs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/publish-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish docs to gh-pages
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf /tmp/pages-worktree
+          git worktree add --detach /tmp/pages-worktree
+          cd /tmp/pages-worktree
+          git rm -rf . >/dev/null
+          cp -r "$GITHUB_WORKSPACE/docs/." .
+          touch .nojekyll
+          git add -A
+          git commit -m "docs: publish from ${GITHUB_SHA}" || echo "no changes"
+          git push origin HEAD:gh-pages
