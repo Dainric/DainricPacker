@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -10,9 +11,16 @@ namespace Dainric.Packer
 {
     public partial class AboutDialog : Window
     {
-        public AboutDialog()
+        public bool CheckUpdateOnStartup { get; private set; }
+        public bool SettingsChanged { get; private set; }
+        bool _ready;
+
+        public AboutDialog(bool checkUpdateOnStartup = true)
         {
             InitializeComponent();
+            CheckUpdateOnStartup = checkUpdateOnStartup;
+            CheckUpdateBox.IsChecked = checkUpdateOnStartup;
+            _ready = true;
             string ver = MainWindow.AppVersionText();
             VerTextBlock.Text = ver;
 
@@ -89,6 +97,50 @@ namespace Dainric.Packer
         }
 
         void CloseDialog(object sender, RoutedEventArgs e) => Close();
+
+        void UpdateSettingChanged(object sender, RoutedEventArgs e)
+        {
+            if (!_ready) return;
+            CheckUpdateOnStartup = CheckUpdateBox.IsChecked == true;
+            SettingsChanged = true;
+        }
+
+        async void CheckUpdateClicked(object sender, RoutedEventArgs e)
+        {
+            BtnCheckUpdate.IsEnabled = false;
+            UpdateStatus.Text = "正在检查更新…";
+            try
+            {
+                var info = await UpdateChecker.FetchAsync();
+                string current = MainWindow.AppVersionNumber();
+                if (UpdateChecker.IsNewer(info.Version, current))
+                {
+                    string notes = (info.Notes ?? "").Trim();
+                    if (notes.Length > 600) notes = notes.Substring(0, 600) + "…";
+                    string msg = "发现新版本 v" + info.Version
+                        + "\n当前版本 v" + current + "\n\n"
+                        + (notes.Length > 0 ? notes : "（没有更新说明）")
+                        + "\n\n是否打开下载页？";
+                    UpdateStatus.Text = "发现新版本 v" + info.Version;
+                    var r = MessageBox.Show(this, msg, "检查更新",
+                        MessageBoxButton.YesNo, MessageBoxImage.Information);
+                    if (r == MessageBoxResult.Yes)
+                        UpdateChecker.OpenDownload(info);
+                }
+                else
+                {
+                    UpdateStatus.Text = "已是最新版本 v" + current;
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus.Text = "检查失败：" + ex.Message;
+            }
+            finally
+            {
+                BtnCheckUpdate.IsEnabled = true;
+            }
+        }
 
         static void OpenDir(string d)
         {

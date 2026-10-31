@@ -12,7 +12,7 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>DainricPacker</AssemblyName>
     <RootNamespace>Dainric.Packer</RootNamespace>
-    <Version>4.0.0</Version>
+    <Version>4.1.0</Version>
     <Product>Dainric 打包器</Product>
     <Company>Dainric</Company>
     <Authors>Dainric</Authors>

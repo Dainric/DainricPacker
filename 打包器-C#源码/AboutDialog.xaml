@@ -2,7 +2,7 @@
 <Window x:Class="Dainric.Packer.AboutDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="关于 Dainric 打包器" Width="470" Height="430"
+        Title="关于 Dainric 打包器" Width="470" Height="510"
         WindowStyle="None" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         AllowsTransparency="True" Background="Transparent"
@@ -65,11 +65,24 @@
                 Click="OpenHelp"/>
         <Button Content="复制诊断信息" Style="{StaticResource GhostButton}"
                 Click="CopyDiag"/>
+        <Button x:Name="BtnCheckUpdate" Content="检查更新"
+                Style="{StaticResource GhostButton}"
+                Click="CheckUpdateClicked"/>
       </WrapPanel>
 
-      <TextBlock Grid.Row="5" Style="{StaticResource Caption}" Margin="0,10,0,0"
-                 TextWrapping="Wrap"
-                 Text="日志目录里会保留每次打包的完整日志，反馈问题时可以直接把日志发给作者。" />
+      <StackPanel Grid.Row="5" Margin="0,10,0,0">
+        <CheckBox x:Name="CheckUpdateBox" Content="启动时检查更新"
+                  Foreground="{StaticResource Label}"
+                  FontFamily="{StaticResource UiFont}" FontSize="12"
+                  Margin="0,0,0,6"
+                  Checked="UpdateSettingChanged"
+                  Unchecked="UpdateSettingChanged"/>
+        <TextBlock x:Name="UpdateStatus" Style="{StaticResource Caption}"
+                   TextWrapping="Wrap" Text=""/>
+        <TextBlock Style="{StaticResource Caption}" Margin="0,6,0,0"
+                   TextWrapping="Wrap"
+                   Text="日志目录里会保留每次打包的完整日志，反馈问题时可以直接把日志发给作者。" />
+      </StackPanel>
 
       <StackPanel Grid.Row="6" Orientation="Horizontal"
                   HorizontalAlignment="Right" Margin="0,10,0,0">

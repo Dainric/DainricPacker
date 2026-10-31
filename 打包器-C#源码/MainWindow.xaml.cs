@@ -72,10 +72,14 @@ namespace Dainric.Packer
             public string SignPfx { get; set; }
             public string SignTs { get; set; }
             public List<string> DataItems { get; set; }
+            public bool CheckUpdateOnStartup { get; set; } = true;
+            public string LastUpdateCheck { get; set; }
         }
         static string UiStateFile => Path.Combine(RuntimeLocator.HomeDir, "ui.json");
         string _pendingLastScript;
         string _savedOutDir;
+        string _lastUpdateCheck;
+        public bool CheckUpdateOnStartup { get; set; } = true;
 
         // ── v3.3.0：高级参数 / 数据文件 / 结果卡 / 批量结果 ──────
         bool _verAuto;
@@ -248,6 +252,8 @@ namespace Dainric.Packer
                 string bt = Environment.GetEnvironmentVariable("DAINRIC_BATCHTEST");
                 if (!string.IsNullOrEmpty(bt))
                     Dispatcher.BeginInvoke(new Action(async () => await BatchSelfTest(bt)));
+                else
+                    Dispatcher.BeginInvoke(new Action(async () => await CheckUpdateAtStartupAsync()));
             };
         }
 
@@ -2366,8 +2372,50 @@ namespace Dainric.Packer
 
         void ShowAbout(object sender, RoutedEventArgs e)
         {
-            var w = new AboutDialog { Owner = this };
+            var w = new AboutDialog(CheckUpdateOnStartup) { Owner = this };
             w.ShowDialog();
+            if (w.SettingsChanged)
+            {
+                CheckUpdateOnStartup = w.CheckUpdateOnStartup;
+                SaveUiState();
+            }
+        }
+
+        /// <summary>启动时静默检查更新；默认每天最多一次</summary>
+        async Task CheckUpdateAtStartupAsync()
+        {
+            try
+            {
+                if (!CheckUpdateOnStartup) return;
+                DateTime last;
+                if (!string.IsNullOrEmpty(_lastUpdateCheck)
+                    && DateTime.TryParse(_lastUpdateCheck, out last)
+                    && (DateTime.Now - last).TotalHours < 24)
+                    return;
+
+                _lastUpdateCheck = DateTime.Now.ToString("o");
+                try { SaveUiState(); } catch { }
+
+                var info = await UpdateChecker.FetchAsync();
+                if (!UpdateChecker.IsNewer(info.Version, APP_VERSION)) return;
+
+                string notes = (info.Notes ?? "").Trim();
+                if (notes.Length > 500) notes = notes.Substring(0, 500) + "…";
+                var r = MessageBox.Show(this,
+                    "发现新版本 v" + info.Version
+                    + "\n当前版本 v" + APP_VERSION
+                    + "\n\n" + (notes.Length > 0 ? notes : "（没有更新说明）")
+                    + "\n\n是否打开下载页？",
+                    "检查更新", MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+                if (r == MessageBoxResult.Yes)
+                    UpdateChecker.OpenDownload(info);
+            }
+            catch (Exception ex)
+            {
+                // 离线 / 清单暂时不可用：静默失败，不打扰使用
+                try { Log("[*] 检查更新失败（已忽略）: " + ex.Message, "dim"); } catch { }
+            }
         }
 
         void LoadUiState()
@@ -2406,6 +2454,8 @@ namespace Dainric.Packer
                 AdvExtra.Text = st.AdvExtra ?? "";
                 AdvSignPfx.Text = st.SignPfx ?? "";
                 AdvSignTs.Text = st.SignTs ?? "";
+                CheckUpdateOnStartup = st.CheckUpdateOnStartup;
+                _lastUpdateCheck = st.LastUpdateCheck;
                 _dataItems.Clear();
                 if (st.DataItems != null)
                 {
@@ -2445,6 +2495,8 @@ namespace Dainric.Packer
                     AdvExtra = AdvExtra.Text,
                     SignPfx = AdvSignPfx.Text,
                     SignTs = AdvSignTs.Text,
+                    CheckUpdateOnStartup = CheckUpdateOnStartup,
+                    LastUpdateCheck = _lastUpdateCheck,
                     DataItems = _dataItems
                         .Select(d => d.Source + "|" + d.Dest).ToList()
                 };

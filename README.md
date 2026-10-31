@@ -1,13 +1,13 @@
 # Dainric 打包器
 
 把 Python 脚本打包成独立 Windows EXE 的桌面工具，基于 **.NET 9 + WPF**。
-内置 Python 3.12 / 3.14 运行时，目标机不需要安装 Python 或 NET；支持批量打包、
-依赖检查、失败诊断与自动修复、产物自检、打包历史、日志落盘、代码签名和 CLI。
+内置 Python 3.12 / 3.14 运行时，目标机不需要安装 Python 或 .NET；支持批量打包、
+依赖检查、失败诊断与自动修复、产物自检、打包历史、日志落盘、代码签名、检查更新和 CLI。
 某些部分使用了AI辅助。
 
 [![build](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml/badge.svg)](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml)
 
-> 当前版本：**v4.0.0** · [下载安装包/绿色版](https://github.com/Dainric/DainricPacker/releases/tag/v4.0.0) · [下载页](https://dainric.github.io/DainricPacker/)
+> 当前版本：**v4.1.0** · [下载安装包/绿色版](https://github.com/Dainric/DainricPacker/releases/latest) · [下载页](https://dainric.github.io/DainricPacker/)
 
 ![主界面](docs/images/main.png)
 
@@ -25,7 +25,10 @@
 - 批量打包：队列状态、只重跑失败项、导出 CSV
 - 单实例 + 右键菜单「用 Dainric 打包」（安装版）
 - 代码签名：使用 `.pfx` 证书给产物做 Windows Authenticode 签名
+- 检查更新：启动静默检查（每天一次）+ 关于页手动检查，更新清单托管在 GitHub Pages
 - CLI 模式：`--build app.py --out dist --json`，可用于脚本 / CI
+
+![检查更新](docs/images/update-check.png)
 
 ![高级参数与签名](docs/images/advanced-signing.png)
 
