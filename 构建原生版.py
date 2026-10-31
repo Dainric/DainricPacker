@@ -156,6 +156,15 @@ else:
     if os.path.exists(inst):
         print("    -> %s  %.1f MB  (%.0f s)" % (
             os.path.basename(inst), size_mb(inst), time.time() - t0))
+        # 每个版本保留一个安装程序副本
+        try:
+            arch = os.path.join(WS, "归档", "旧版本")
+            os.makedirs(arch, exist_ok=True)
+            shutil.copy2(inst, os.path.join(arch, os.path.basename(inst)))
+            print("    -> 已归档安装程序: " + os.path.join("归档", "旧版本",
+                  os.path.basename(inst)))
+        except Exception as ex:
+            print("    ! 归档安装程序失败: %s" % ex)
     else:
         sys.exit("未找到安装包产物")
 
