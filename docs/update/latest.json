@@ -1,16 +1,16 @@
 {
-  "version": "4.1.0",
+  "version": "4.1.1",
   "channel": "stable",
   "published_at": "2026-10-31",
-  "notes": "新增检查更新：关于页手动检查、启动静默检查（每天最多一次）、更新说明弹窗；检查失败不影响离线使用。",
+  "notes": "新增关于页一键卸载；安装版调用自带卸载器并清理程序、运行时、配置、历史、日志；绿色版提示手动删除。",
   "installer": {
-    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.0/DainricPacker-Setup-v4.1.0.exe",
-    "size": 97270744,
-    "sha256": "404C06B6E491C4599F413AD6A9FE6C2F5366C4E3A2128CB0B823DAF1A6C3EDD0"
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.1/DainricPacker-Setup-v4.1.1.exe",
+    "size": 97274782,
+    "sha256": "BEAB99ECEAD6451BD3996E12F53B45586F1336D81CDD4DA85CEEBC4621736E9E"
   },
   "portable": {
-    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.0/DainricPacker-Portable-v4.1.0.zip",
-    "size": 120539870,
-    "sha256": "260C46B6EDE705F329C0E86E6D6A10B2176EF41DEF61BF7243CC00962A981D11"
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.1/DainricPacker-Portable-v4.1.1.zip",
+    "size": 120540331,
+    "sha256": "58C3A4888B07C17AA4A0DC713C7717F2530848FC605AA2C122AADDFD52E4149D"
   }
 }
