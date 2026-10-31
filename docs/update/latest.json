@@ -1,16 +1,16 @@
 {
-  "version": "4.0.0",
+  "version": "4.1.0",
   "channel": "stable",
-  "published_at": "2026-10-25",
-  "notes": "CLI 命令行模式；单实例 + 右键菜单；代码签名支持；UI 回归与打包冒烟测试。",
+  "published_at": "2026-10-31",
+  "notes": "新增检查更新：关于页手动检查、启动静默检查（每天最多一次）、更新说明弹窗；检查失败不影响离线使用。",
   "installer": {
-    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.0.0/DainricPacker-Setup-v4.0.0.exe",
-    "size": 97272433,
-    "sha256": "AD56B3A4B7F5AB0D3B79671C9250FF7168E00F94BA3D83CB0284DE3E992657FD"
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.0/DainricPacker-Setup-v4.1.0.exe",
+    "size": 97270744,
+    "sha256": "404C06B6E491C4599F413AD6A9FE6C2F5366C4E3A2128CB0B823DAF1A6C3EDD0"
   },
   "portable": {
-    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.0.0/DainricPacker-Portable-v4.0.0.zip",
-    "size": 120484638,
-    "sha256": "252041004248DB0B47D2158F02E07E0A10C534D8DF8D7E1D8CFC874028EF5BC4"
+    "url": "https://github.com/Dainric/DainricPacker/releases/download/v4.1.0/DainricPacker-Portable-v4.1.0.zip",
+    "size": 120539870,
+    "sha256": "260C46B6EDE705F329C0E86E6D6A10B2176EF41DEF61BF7243CC00962A981D11"
   }
 }
