@@ -7,7 +7,7 @@
 
 [![build](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml/badge.svg)](https://github.com/Dainric/DainricPacker/actions/workflows/build.yml)
 
-> 当前版本：**v4.1.0** · [下载安装包/绿色版](https://github.com/Dainric/DainricPacker/releases/latest) · [下载页](https://dainric.github.io/DainricPacker/)
+> 当前版本：**v4.1.1** · [下载安装包/绿色版](https://github.com/Dainric/DainricPacker/releases/latest) · [下载页](https://dainric.github.io/DainricPacker/)
 
 ![主界面](docs/images/main.png)
 
@@ -26,6 +26,7 @@
 - 单实例 + 右键菜单「用 Dainric 打包」（安装版）
 - 代码签名：使用 `.pfx` 证书给产物做 Windows Authenticode 签名
 - 检查更新：启动静默检查（每天一次）+ 关于页手动检查，更新清单托管在 GitHub Pages
+- 一键卸载：关于页调用安装器自带卸载程序，清理程序、运行时、配置、历史和日志
 - CLI 模式：`--build app.py --out dist --json`，可用于脚本 / CI
 
 ![检查更新](docs/images/update-check.png)

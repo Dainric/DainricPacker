@@ -84,11 +84,14 @@
                    Text="日志目录里会保留每次打包的完整日志，反馈问题时可以直接把日志发给作者。" />
       </StackPanel>
 
-      <StackPanel Grid.Row="6" Orientation="Horizontal"
-                  HorizontalAlignment="Right" Margin="0,10,0,0">
+      <Grid Grid.Row="6" Margin="0,10,0,0">
+        <Button Content="卸载" Style="{StaticResource DangerButton}"
+                HorizontalAlignment="Left" MinWidth="76"
+                Click="UninstallClicked"/>
         <Button Content="关闭" Style="{StaticResource SecondaryButton}"
-                Click="CloseDialog" MinWidth="76"/>
-      </StackPanel>
+                HorizontalAlignment="Right" MinWidth="76"
+                Click="CloseDialog"/>
+      </Grid>
     </Grid>
   </Border>
 </Window>

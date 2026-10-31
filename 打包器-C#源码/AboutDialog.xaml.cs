@@ -98,6 +98,49 @@ namespace Dainric.Packer
 
         void CloseDialog(object sender, RoutedEventArgs e) => Close();
 
+        // 一键卸载：先退出程序，再启动 Inno 卸载器
+        void UninstallClicked(object sender, RoutedEventArgs e)
+        {
+            string unins = Path.Combine(AppContext.BaseDirectory, "unins000.exe");
+            if (!File.Exists(unins))
+            {
+                MessageBox.Show(this,
+                    "当前是绿色版，没有卸载程序\n"
+                    + "直接删除程序文件夹即可\n"
+                    + "数据目录：%LOCALAPPDATA%\\Dainric",
+                    "卸载", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var r = MessageBox.Show(this,
+                "将卸载 Dainric 打包器\n\n"
+                + "会删除：程序、内置运行时、配置、历史、日志\n"
+                + "不会删除你打包出来的产物\n\n"
+                + "确定继续吗？",
+                "卸载 Dainric 打包器",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (r != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var psi = new ProcessStartInfo("cmd.exe",
+                    "/c ping -n 2 127.0.0.1 >nul & start \"\" \""
+                    + unins + "\"")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+                Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "无法启动卸载程序\n" + ex.Message,
+                    "卸载失败", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            Application.Current.Shutdown();
+        }
+
         void UpdateSettingChanged(object sender, RoutedEventArgs e)
         {
             if (!_ready) return;

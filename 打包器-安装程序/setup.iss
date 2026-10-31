@@ -97,9 +97,6 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchAfter}"; \
     Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
-; 连运行时和配置一起清掉，避免残留 190 MB
-Type: filesandordirs; Name: "{localappdata}\Dainric\runtime-py312"
-Type: filesandordirs; Name: "{localappdata}\Dainric\runtime-py314"
-Type: filesandordirs; Name: "{localappdata}\Dainric\config.json"
-; 若集中目录已空，一并移除
-Type: dirifempty; Name: "{localappdata}\Dainric"
+; 清理运行时和用户数据
+Type: filesandordirs; Name: "{localappdata}\Dainric"
+
